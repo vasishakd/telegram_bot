@@ -10,3 +10,7 @@ def init_db() -> async_sessionmaker:
 
 def generate_db_url() -> str:
     return f'postgresql+asyncpg://{Config.DB_USER}:{Config.DB_PASS}@{Config.DB_HOST}:{Config.DB_PORT}/{Config.DB_NAME}'
+
+
+def generate_db_url_sync() -> str:
+    return f'postgresql+psycopg2://{Config.DB_USER}:{Config.DB_PASS}@{Config.DB_HOST}:{Config.DB_PORT}/{Config.DB_NAME}'

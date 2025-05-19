@@ -67,6 +67,6 @@ class Anime(Base):
     next_air_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=True)
     episodes_number: Mapped[int] = mapped_column(Integer())
     episodes_aired: Mapped[int] = mapped_column(Integer())
-    last_notification_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_notification_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=True)
     subscriptions: Mapped[list["Subscription"]] = relationship(back_populates="anime")
 
