@@ -141,7 +141,7 @@ async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
             external_id=anime.id,
             defaults={
                 'name': f'{anime.name} / {anime.name_russian}',
-                'next_air_at': datetime.datetime.fromisoformat(anime.next_episode_at),
+                'next_air_at': datetime.datetime.fromisoformat(anime.next_episode_at) if anime.next_episode_at else None,
                 'episodes_number': anime.episodes,
                 'episodes_aired': anime.episodes_aired,
                 'last_notification_at': datetime.datetime.now(),
