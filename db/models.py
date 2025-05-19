@@ -64,7 +64,7 @@ class Anime(Base):
     image_url: Mapped[str] = mapped_column(Text(), nullable=True)
     site_url: Mapped[str] = mapped_column(Text(), nullable=True)
     external_id: Mapped[str] = mapped_column(String(), unique=True)
-    next_air_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    next_air_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=True)
     episodes_number: Mapped[int] = mapped_column(Integer())
     episodes_aired: Mapped[int] = mapped_column(Integer())
     last_notification_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
