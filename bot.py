@@ -1,4 +1,5 @@
 import datetime
+import json
 import logging
 
 from gql import Client, gql
@@ -127,6 +128,52 @@ async def find_more(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return WAITING_FOR_APPROVE
 
 
+async def unsubscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    data = json.loads(query.data)
+
+    async with Session() as session:
+        subscription = await models.Subscription.get_or_none(session=session, id=int(data['subscription_id']))
+
+        print(subscription)
+
+        if not subscription:
+            await query.message.reply_text('Вы не подписаны на данное аниме')
+            return
+
+        anime = await models.Anime.get(session=session, id=subscription.anime_id)
+        await subscription.delete(session=session)
+
+        await query.message.reply_text(f'Подписка на аниме ({anime.name}) отменена')
+
+
+async def subscriptions(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async with Session() as session:
+        subscriptions_list = await models.Subscription.list_by_user_id(session=session, user_id=str(update.message.from_user.id))
+
+        if not subscriptions_list:
+            await update.message.reply_text('У вас нет активных подписок, чтобы подписаться на новые серии используйте команду /subscriptions')
+            return ConversationHandler.END
+
+        for subscription in subscriptions_list:
+            callback_data = {'subscription_id': subscription.id, 'action': 'unsubscribe'}
+            keyboard = [
+                [
+                    InlineKeyboardButton('Отписаться', callback_data=json.dumps(callback_data)),
+                ]
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            anime = await models.Anime.get(session=session, id=subscription.anime_id)
+
+            await update.message.reply_photo(
+                photo=anime.image_url,
+                caption=f"Название: {anime.name}\nСсылка на сайт: {anime.site_url}",
+                reply_markup=reply_markup,
+            )
+
+
 async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -144,7 +191,7 @@ async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 'next_air_at': datetime.datetime.fromisoformat(anime.next_episode_at) if anime.next_episode_at else None,
                 'episodes_number': anime.episodes,
                 'episodes_aired': anime.episodes_aired,
-                'last_notification_at': datetime.datetime.now(),
+                'last_notification_at': None,
                 'image_url': anime.image_url,
                 'site_url': anime.site_url,
             }
@@ -160,8 +207,7 @@ async def confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 
-async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Подписка отменена.")
+async def end_conversation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 
@@ -217,7 +263,11 @@ async def send_shikimori(text: str):
 
 
 async def post_init(app: Application) -> None:
-    await app.bot.set_my_commands([('start', 'Starts the bot'), ('subscribe', 'Подписаться на уведомления Аниме')])
+    await app.bot.set_my_commands([
+        ('start', 'Starts the bot'),
+        ('subscribe', 'Подписаться на уведомления Аниме'),
+        ('subscriptions', 'Посмотреть текущие подписки'),
+    ])
     await app.bot.set_chat_menu_button()
 
 
@@ -227,19 +277,24 @@ def main():
     app = ApplicationBuilder().token(TOKEN).post_init(post_init).build()
 
     app.add_handler(CommandHandler('start', start))
+    app.add_handler(CommandHandler('subscriptions', subscriptions))
+    app.add_handler(CallbackQueryHandler(unsubscribe, pattern='.*unsubscribe.*'))
 
-    conv_handler = ConversationHandler(
+    subscribe_handler = ConversationHandler(
         entry_points=[CommandHandler('subscribe', subscribe)],
         states={
             WAITING_FOR_TEXT: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text)],
             WAITING_FOR_APPROVE: [
-                CallbackQueryHandler(find_more, pattern="^find_more"),
+                CallbackQueryHandler(find_more, pattern="^find_more$"),
                 CallbackQueryHandler(confirm, pattern="^confirm$"),
             ],
         },
-        fallbacks=[CommandHandler('cancel', cancel)],
+        fallbacks=[
+            CallbackQueryHandler(end_conversation, pattern='^env_conversation$'),
+            CommandHandler('cancel', end_conversation),
+        ],
     )
-    app.add_handler(conv_handler)
+    app.add_handler(subscribe_handler)
 
     print("Бот запущен")
     app.run_polling()

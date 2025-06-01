@@ -15,6 +15,9 @@ log = logging.getLogger(__name__)
 
 @periodic_task_run(sleep=Config.NOTIFICATION_PERIOD)
 async def check_notifications():
+    if datetime.datetime.now().time() < datetime.time(18, 0):
+        return
+
     async with Session() as session:
         query = (
             select(models.Anime)

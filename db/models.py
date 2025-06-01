@@ -1,4 +1,7 @@
+from collections.abc import Sequence
 from datetime import datetime
+from typing import TypeVar
+
 from sqlalchemy import ForeignKey, DateTime, Integer, select, func, UniqueConstraint, Text
 from sqlalchemy import String
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,13 +10,15 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 
+T = TypeVar('T', bound='BaseModel')
+
 
 class Base(DeclarativeBase):
     created_at = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     @classmethod
-    async def get_or_create(cls, session: AsyncSession, defaults: dict = None, **kwargs) -> tuple['Base', bool]:
+    async def get_or_create(cls, session: AsyncSession, defaults: dict = None, **kwargs) -> tuple[T, bool]:
         query = select(cls).filter_by(**kwargs)
 
         result = await session.scalars(query)
@@ -32,6 +37,24 @@ class Base(DeclarativeBase):
         await session.commit()
 
         return result, True
+
+    @classmethod
+    async def get(cls, session: AsyncSession, **kwargs) -> T:
+        query = select(cls).filter_by(**kwargs)
+
+        result = await session.scalars(query)
+        return result.one()
+
+    @classmethod
+    async def get_or_none(cls, session: AsyncSession, **kwargs) -> T:
+        query = select(cls).filter_by(**kwargs)
+
+        result = await session.scalars(query)
+        return result.one_or_none()
+
+    async def delete(self, session: AsyncSession) -> None:
+        await session.delete(self)
+        await session.commit()
 
 
 class User(Base):
@@ -53,7 +76,19 @@ class Subscription(Base):
 
     __table_args__ = (
         UniqueConstraint('anime_id', 'user_id', name='_anime_user_uc'),
-   )
+    )
+
+    @classmethod
+    async def list_by_user_id(cls, session: AsyncSession, user_id: str) -> Sequence['Subscription']:
+        query = (
+            select(cls)
+            .join(cls.user)
+            .where(User.telegram_id == user_id)
+        )
+
+        result = await session.scalars(query)
+
+        return result.all()
 
 
 class Anime(Base):
