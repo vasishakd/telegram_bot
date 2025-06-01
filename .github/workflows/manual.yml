@@ -26,7 +26,7 @@ jobs:
         port: 22
         script: |
           cd /opt/telegram_bot
-          git pull origin master
+          git pull origin main
           git status
           source .venv/bin/activate
           alembic upgrade head
