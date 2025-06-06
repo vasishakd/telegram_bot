@@ -13,7 +13,8 @@ Session = db_utils.init_db()
 
 # noinspection PyAsyncCall
 async def main():
-    asyncio.create_task(tasks.check_notifications())
+    asyncio.create_task(tasks.check_notifications_anime())
+    asyncio.create_task(tasks.check_notifications_manga())
 
 
 if __name__ == '__main__':

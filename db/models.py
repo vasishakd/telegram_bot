@@ -10,6 +10,8 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 
+from db import enums
+
 T = TypeVar('T', bound='BaseModel')
 
 
@@ -63,6 +65,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     telegram_id: Mapped[str] = mapped_column(String(), unique=True)
     subscriptions: Mapped[list["Subscription"]] = relationship(back_populates="user")
+    subscriptions_manga: Mapped[list["SubscriptionManga"]] = relationship(back_populates="user")
 
 
 class Subscription(Base):
@@ -91,6 +94,32 @@ class Subscription(Base):
         return result.all()
 
 
+class SubscriptionManga(Base):
+    __tablename__ = "subscriptionmanga"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    manga_id: Mapped[int] = mapped_column(ForeignKey("manga.id"))
+    manga: Mapped["Manga"] = relationship(back_populates="subscriptions")
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    user: Mapped["User"] = relationship(back_populates="subscriptions_manga")
+
+    __table_args__ = (
+        UniqueConstraint('manga_id', 'user_id', name='_manga_user_uc'),
+    )
+
+    @classmethod
+    async def list_by_user_id(cls, session: AsyncSession, user_id: str) -> Sequence['SubscriptionManga']:
+        query = (
+            select(cls)
+            .join(cls.user)
+            .where(User.telegram_id == user_id)
+        )
+
+        result = await session.scalars(query)
+
+        return result.all()
+
+
 class Anime(Base):
     __tablename__ = "anime"
 
@@ -105,3 +134,16 @@ class Anime(Base):
     last_notification_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=True)
     subscriptions: Mapped[list["Subscription"]] = relationship(back_populates="anime")
 
+
+class Manga(Base):
+    __tablename__ = "manga"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String())
+    image_url: Mapped[str] = mapped_column(Text(), nullable=True)
+    site_url: Mapped[str] = mapped_column(Text(), nullable=True)
+    external_id: Mapped[str] = mapped_column(String(), unique=True)
+    latest_chapter: Mapped[int] = mapped_column(Integer())
+    last_notification_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=True)
+    subscriptions: Mapped[list["SubscriptionManga"]] = relationship(back_populates="manga")
+    status: Mapped[enums.MangaStatus] = mapped_column(String(), default=enums.MangaStatus.airing)

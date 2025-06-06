@@ -1,4 +1,4 @@
-import typing
+import logging
 
 from dotenv import dotenv_values
 from pydantic import BaseModel, Field
@@ -12,10 +12,16 @@ class ConfigENV(BaseModel):
     DB_NAME: str
     DB_USER: str
     BOT_TOKEN: str
-    NOTIFICATION_PERIOD: typing.Optional[int] = Field(default=300)
+    LOG_LEVEL: str = Field(default='DEBUG')
+    NOTIFICATION_PERIOD_ANIME: int | None = Field(default=60 * 15)
+    NOTIFICATION_PERIOD_MANGA: int | None = Field(default=60 * 60)
+    MANGA_UPDATES_URL: str | None = Field(default='https://api.mangaupdates.com/')
 
 
 paths = pathlib.Path(__file__).parent.resolve()
 
 
 Config = ConfigENV(**dotenv_values(pathlib.Path(__file__).parent.resolve() / "../.env"))
+
+# apply logging level for already loaded loggers
+logging.getLogger().setLevel(Config.LOG_LEVEL)
