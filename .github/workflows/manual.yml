@@ -14,10 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install ruff and run check/format
+      - name: Install ruff
         uses: astral-sh/ruff-action@v3
         with:
-          args: "format --check --diff ./src ./bot.py"
+          args: "--version"
+      - name: Run ruff check
+        run: ruff check ./src ./bot.py
+      - name: Run ruff format
+        run: ruff format --check --diff ./src ./bot.py
 
   # This workflow contains a single job called "build"
   build:
