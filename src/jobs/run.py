@@ -3,8 +3,8 @@ import logging
 
 import uvloop
 
-from db import utils as db_utils
-from jobs import tasks
+from src.db import utils as db_utils
+from src.jobs import tasks
 
 log = logging.getLogger(__name__)
 

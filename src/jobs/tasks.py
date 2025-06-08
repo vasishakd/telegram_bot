@@ -5,11 +5,11 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import joinedload
 from telegram import Bot
 
-from clients.manga import MangaUpdatesClient
-from config import Config
-from db import models, enums
-from jobs.run import Session
-from jobs.utils import periodic_task_run
+from src.clients.manga import MangaUpdatesClient
+from src.config import Config
+from src.db import models, enums
+from src.jobs.run import Session
+from src.jobs.utils import periodic_task_run
 
 log = logging.getLogger(__name__)
 
@@ -33,11 +33,18 @@ async def check_notifications_anime():
             .where(
                 func.DATE(models.Anime.next_air_at) == datetime.date.today(),
                 (
-                    (func.DATE(models.Anime.last_notification_at) != datetime.date.today())
+                    (
+                        func.DATE(models.Anime.last_notification_at)
+                        != datetime.date.today()
+                    )
                     | (models.Anime.last_notification_at.is_(None))
                 ),
             )
-            .options(joinedload(models.Anime.subscriptions).joinedload(models.Subscription.user))
+            .options(
+                joinedload(models.Anime.subscriptions).joinedload(
+                    models.Subscription.user
+                )
+            )
         )
 
         animes = (await session.scalars(query)).unique().all()
@@ -51,7 +58,10 @@ async def check_notifications_anime():
             )
             anime_locked = (await session.scalars(query)).one()
 
-            if anime_locked.last_notification_at and anime_locked.last_notification_at.date() == datetime.date.today():
+            if (
+                anime_locked.last_notification_at
+                and anime_locked.last_notification_at.date() == datetime.date.today()
+            ):
                 continue
 
             anime_locked.last_notification_at = datetime.datetime.now()
@@ -64,6 +74,7 @@ async def check_notifications_anime():
                 photo=anime.image_url,
             )
 
+
 @periodic_task_run(sleep=Config.NOTIFICATION_PERIOD_MANGA)
 async def check_notifications_manga():
     if not is_valid_time_for_notification():
@@ -75,7 +86,11 @@ async def check_notifications_manga():
             .where(
                 models.Manga.status == enums.MangaStatus.airing,
             )
-            .options(joinedload(models.Manga.subscriptions).joinedload(models.SubscriptionManga.user))
+            .options(
+                joinedload(models.Manga.subscriptions).joinedload(
+                    models.SubscriptionManga.user
+                )
+            )
         )
 
         manga_list = (await session.scalars(query)).unique().all()

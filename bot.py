@@ -6,19 +6,26 @@ from enum import StrEnum
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes, MessageHandler, \
-    filters, ConversationHandler, Application
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    CallbackQueryHandler,
+    ContextTypes,
+    MessageHandler,
+    filters,
+    ConversationHandler,
+    Application,
+)
 
-from clients.manga import MangaUpdatesClient, SearchSeriesItem
-from clients.shikimori import send_shikimori
-from config import Config
-from db import models, enums
-from db.utils import init_db
+from src.clients.manga import MangaUpdatesClient
+from src.clients.shikimori import send_shikimori
+from src.config import Config
+from src.db import models, enums
+from src.db.utils import init_db
 
 # Включаем логирование
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
 )
 
 WAITING_FOR_TEXT = 1
@@ -46,16 +53,16 @@ class SubscriptionType(StrEnum):
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Привет! Выберите команду из списка")
+    await update.message.reply_text('Привет! Выберите команду из списка')
 
 
 async def subscribe_anime(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Пожалуйста, введите название аниме:")
+    await update.message.reply_text('Пожалуйста, введите название аниме:')
     return WAITING_FOR_TEXT
 
 
 async def subscribe_manga(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Пожалуйста, введите название манги:")
+    await update.message.reply_text('Пожалуйста, введите название манги:')
     return WAITING_FOR_TEXT
 
 
@@ -67,7 +74,9 @@ async def handle_text_anime(update: Update, context: ContextTypes.DEFAULT_TYPE):
     shikimori_response = await send_shikimori(user_text)
 
     if not shikimori_response['animes']:
-        await update.message.reply_text('Не получилось найти аниме, попробуйте команду /subscribe_anime еще раз')
+        await update.message.reply_text(
+            'Не получилось найти аниме, попробуйте команду /subscribe_anime еще раз'
+        )
         return ConversationHandler.END
 
     for anime in shikimori_response['animes']:
@@ -91,8 +100,8 @@ async def handle_text_anime(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Создаем кнопки
     keyboard = [
         [
-            InlineKeyboardButton("Найти еще", callback_data='find_more_anime'),
-            InlineKeyboardButton("Подтвердить", callback_data='confirm_anime')
+            InlineKeyboardButton('Найти еще', callback_data='find_more_anime'),
+            InlineKeyboardButton('Подтвердить', callback_data='confirm_anime'),
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -102,7 +111,7 @@ async def handle_text_anime(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Отправляем изображение с текстом и кнопками
     await update.message.reply_photo(
         photo=anime.image_url,
-        caption=f"Название: {anime.name}/{anime.name_russian}\nГод выпуска: {anime.year}\nСсылка на сайт: {anime.site_url}",
+        caption=f'Название: {anime.name}/{anime.name_russian}\nГод выпуска: {anime.year}\nСсылка на сайт: {anime.site_url}',
         reply_markup=reply_markup,
     )
 
@@ -115,7 +124,9 @@ async def handle_text_manga(update: Update, context: ContextTypes.DEFAULT_TYPE):
     search_response = await manga_client.search_series(search_text=user_text)
 
     if not search_response.results:
-        await update.message.reply_text('Не получилось найти мангу, попробуйте команду /subscribe_manga еще раз')
+        await update.message.reply_text(
+            'Не получилось найти мангу, попробуйте команду /subscribe_manga еще раз'
+        )
         return ConversationHandler.END
 
     context.chat_data['manga_list'] = search_response.results
@@ -124,8 +135,8 @@ async def handle_text_manga(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Создаем кнопки
     keyboard = [
         [
-            InlineKeyboardButton("Найти еще", callback_data='find_more_manga'),
-            InlineKeyboardButton("Подтвердить", callback_data='confirm_manga')
+            InlineKeyboardButton('Найти еще', callback_data='find_more_manga'),
+            InlineKeyboardButton('Подтвердить', callback_data='confirm_manga'),
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -135,7 +146,7 @@ async def handle_text_manga(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Отправляем изображение с текстом и кнопками
     await update.message.reply_photo(
         photo=manga.record.image_url,
-        caption=f"Название: {manga.record.title}\nГод выпуска: {manga.record.year}\nСсылка на сайт: {manga.record.url}",
+        caption=f'Название: {manga.record.title}\nГод выпуска: {manga.record.year}\nСсылка на сайт: {manga.record.url}',
         reply_markup=reply_markup,
     )
 
@@ -149,8 +160,8 @@ async def find_more_anime(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Создаем кнопки
     keyboard = [
         [
-            InlineKeyboardButton("Найти еще", callback_data='find_more_anime'),
-            InlineKeyboardButton("Подтвердить", callback_data='confirm_anime')
+            InlineKeyboardButton('Найти еще', callback_data='find_more_anime'),
+            InlineKeyboardButton('Подтвердить', callback_data='confirm_anime'),
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -161,13 +172,15 @@ async def find_more_anime(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         anime = context.chat_data.get('animes')[anime_index]
     except IndexError:
-        await query.message.reply_text('Не получилось найти аниме, попробуйте еще команду /subscribe_anime еще раз')
+        await query.message.reply_text(
+            'Не получилось найти аниме, попробуйте еще команду /subscribe_anime еще раз'
+        )
         return ConversationHandler.END
 
     # Отправляем изображение с текстом и кнопками
     await query.message.reply_photo(
         photo=anime.image_url,
-        caption=f"Название: {anime.name}/{anime.name_russian}\nГод выпуска: {anime.year}\nСсылка на сайт: {anime.site_url}",
+        caption=f'Название: {anime.name}/{anime.name_russian}\nГод выпуска: {anime.year}\nСсылка на сайт: {anime.site_url}',
         reply_markup=reply_markup,
     )
 
@@ -181,8 +194,8 @@ async def find_more_manga(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Создаем кнопки
     keyboard = [
         [
-            InlineKeyboardButton("Найти еще", callback_data='find_more_manga'),
-            InlineKeyboardButton("Подтвердить", callback_data='confirm_manga')
+            InlineKeyboardButton('Найти еще', callback_data='find_more_manga'),
+            InlineKeyboardButton('Подтвердить', callback_data='confirm_manga'),
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -193,13 +206,15 @@ async def find_more_manga(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         manga = context.chat_data.get('manga_list')[manga_index]
     except IndexError:
-        await query.message.reply_text('Не получилось найти аниме, попробуйте еще команду /subscribe_manga еще раз')
+        await query.message.reply_text(
+            'Не получилось найти аниме, попробуйте еще команду /subscribe_manga еще раз'
+        )
         return ConversationHandler.END
 
     # Отправляем изображение с текстом и кнопками
     await query.message.reply_photo(
         photo=manga.record.image_url,
-        caption=f"Название: {manga.record.title}\nГод выпуска: {manga.record.year}\nСсылка на сайт: {manga.record.url}",
+        caption=f'Название: {manga.record.title}\nГод выпуска: {manga.record.year}\nСсылка на сайт: {manga.record.url}',
         reply_markup=reply_markup,
     )
 
@@ -220,7 +235,9 @@ async def unsubscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def unsubscribe_anime(query: CallbackQuery, session: AsyncSession, data: dict):
-    subscription = await models.Subscription.get_or_none(session=session, id=int(data['subscription_id']))
+    subscription = await models.Subscription.get_or_none(
+        session=session, id=int(data['subscription_id'])
+    )
 
     if not subscription:
         await query.message.reply_text('Вы не подписаны на данное аниме')
@@ -233,7 +250,9 @@ async def unsubscribe_anime(query: CallbackQuery, session: AsyncSession, data: d
 
 
 async def unsubscribe_manga(query: CallbackQuery, session: AsyncSession, data: dict):
-    subscription = await models.SubscriptionManga.get_or_none(session=session, id=int(data['subscription_id']))
+    subscription = await models.SubscriptionManga.get_or_none(
+        session=session, id=int(data['subscription_id'])
+    )
 
     if not subscription:
         await query.message.reply_text('Вы не подписаны эту мангу')
@@ -247,17 +266,27 @@ async def unsubscribe_manga(query: CallbackQuery, session: AsyncSession, data: d
 
 async def subscriptions_anime(update: Update, context: ContextTypes.DEFAULT_TYPE):
     async with Session() as session:
-        subscriptions_list = await models.Subscription.list_by_user_id(session=session, user_id=str(update.message.from_user.id))
+        subscriptions_list = await models.Subscription.list_by_user_id(
+            session=session, user_id=str(update.message.from_user.id)
+        )
 
         if not subscriptions_list:
-            await update.message.reply_text('У вас нет активных подписок, чтобы подписаться на новые серии используйте команду /subscribe_anime')
+            await update.message.reply_text(
+                'У вас нет активных подписок, чтобы подписаться на новые серии используйте команду /subscribe_anime'
+            )
             return ConversationHandler.END
 
         for subscription in subscriptions_list:
-            callback_data = {'subscription_id': subscription.id, 'action': 'unsubscribe', 'type': SubscriptionType.manga}
+            callback_data = {
+                'subscription_id': subscription.id,
+                'action': 'unsubscribe',
+                'type': SubscriptionType.manga,
+            }
             keyboard = [
                 [
-                    InlineKeyboardButton('Отписаться', callback_data=json.dumps(callback_data)),
+                    InlineKeyboardButton(
+                        'Отписаться', callback_data=json.dumps(callback_data)
+                    ),
                 ]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
@@ -265,32 +294,44 @@ async def subscriptions_anime(update: Update, context: ContextTypes.DEFAULT_TYPE
 
             await update.message.reply_photo(
                 photo=anime.image_url,
-                caption=f"Название: {anime.name}\nСсылка на сайт: {anime.site_url}",
+                caption=f'Название: {anime.name}\nСсылка на сайт: {anime.site_url}',
                 reply_markup=reply_markup,
             )
 
 
 async def subscriptions_manga(update: Update, context: ContextTypes.DEFAULT_TYPE):
     async with Session() as session:
-        subscriptions_list = await models.SubscriptionManga.list_by_user_id(session=session, user_id=str(update.message.from_user.id))
+        subscriptions_list = await models.SubscriptionManga.list_by_user_id(
+            session=session, user_id=str(update.message.from_user.id)
+        )
 
         if not subscriptions_list:
-            await update.message.reply_text('У вас нет активных подписок, чтобы подписаться на мангу используйте команду /subscribe_manga')
+            await update.message.reply_text(
+                'У вас нет активных подписок, чтобы подписаться на мангу используйте команду /subscribe_manga'
+            )
             return ConversationHandler.END
 
         for subscription in subscriptions_list:
-            callback_data = {'subscription_id': subscription.id, 'action': 'unsubscribe', 'type': SubscriptionType.manga}
+            callback_data = {
+                'subscription_id': subscription.id,
+                'action': 'unsubscribe',
+                'type': SubscriptionType.manga,
+            }
             keyboard = [
                 [
-                    InlineKeyboardButton('Отписаться', callback_data=json.dumps(callback_data)),
+                    InlineKeyboardButton(
+                        'Отписаться', callback_data=json.dumps(callback_data)
+                    ),
                 ]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            manga: models.Manga = await models.Manga.get(session=session, id=subscription.manga_id)
+            manga: models.Manga = await models.Manga.get(
+                session=session, id=subscription.manga_id
+            )
 
             await update.message.reply_photo(
                 photo=manga.image_url,
-                caption=f"Название: {manga.name}\nСсылка на сайт: {manga.site_url}",
+                caption=f'Название: {manga.name}\nСсылка на сайт: {manga.site_url}',
                 reply_markup=reply_markup,
             )
 
@@ -303,20 +344,23 @@ async def confirm_anime(update: Update, context: ContextTypes.DEFAULT_TYPE):
     anime: Anime = context.chat_data.get('animes')[anime_index]
 
     async with Session() as session:
-        user, _ = await models.User.get_or_create(session=session, telegram_id=str(query.from_user.id))
+        user, _ = await models.User.get_or_create(
+            session=session, telegram_id=str(query.from_user.id)
+        )
         anime_model, _ = await models.Anime.get_or_create(
             session=session,
             external_id=anime.id,
             defaults={
                 'name': f'{anime.name} / {anime.name_russian}',
-                'next_air_at': datetime.datetime.fromisoformat(anime.next_episode_at) if anime.next_episode_at else None,
+                'next_air_at': datetime.datetime.fromisoformat(anime.next_episode_at)
+                if anime.next_episode_at
+                else None,
                 'episodes_number': anime.episodes,
                 'episodes_aired': anime.episodes_aired,
                 'last_notification_at': None,
                 'image_url': anime.image_url,
                 'site_url': anime.site_url,
-            }
-
+            },
         )
         subscription, new_subscription = await models.Subscription.get_or_create(
             session=session,
@@ -324,7 +368,11 @@ async def confirm_anime(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user_id=user.id,
         )
 
-    await query.message.reply_text("Подписка на уведомления оформлена!" if new_subscription else "Вы уже подписаны на это аниме")
+    await query.message.reply_text(
+        'Подписка на уведомления оформлена!'
+        if new_subscription
+        else 'Вы уже подписаны на это аниме'
+    )
     return ConversationHandler.END
 
 
@@ -337,7 +385,9 @@ async def confirm_manga(update: Update, context: ContextTypes.DEFAULT_TYPE):
     manga = await manga_client.get_series(series_id=manga.record.series_id)
 
     async with Session() as session:
-        user, _ = await models.User.get_or_create(session=session, telegram_id=str(query.from_user.id))
+        user, _ = await models.User.get_or_create(
+            session=session, telegram_id=str(query.from_user.id)
+        )
         manga_model, _ = await models.Manga.get_or_create(
             session=session,
             external_id=str(manga.series_id),
@@ -347,9 +397,10 @@ async def confirm_manga(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 'last_notification_at': None,
                 'image_url': manga.image_url,
                 'site_url': manga.url,
-                'status': enums.MangaStatus.ended if manga.completed else enums.MangaStatus.airing,
-            }
-
+                'status': enums.MangaStatus.ended
+                if manga.completed
+                else enums.MangaStatus.airing,
+            },
         )
         subscription, new_subscription = await models.SubscriptionManga.get_or_create(
             session=session,
@@ -357,7 +408,11 @@ async def confirm_manga(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user_id=user.id,
         )
 
-    await query.message.reply_text("Подписка на уведомления оформлена!" if new_subscription else "Вы уже подписаны на эту мангу")
+    await query.message.reply_text(
+        'Подписка на уведомления оформлена!'
+        if new_subscription
+        else 'Вы уже подписаны на эту мангу'
+    )
     return ConversationHandler.END
 
 
@@ -366,14 +421,16 @@ async def end_conversation(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def post_init(app: Application) -> None:
-    await app.bot.set_my_commands([
-        ('start', 'Starts the bot'),
-        ('subscribe_anime', 'Подписаться на уведомления Аниме'),
-        ('subscribe_manga', 'Подписаться на уведомления по манге'),
-        ('subscriptions_anime', 'Посмотреть текущие подписки на аниме'),
-        ('subscriptions_manga', 'Посмотреть текущие подписки на мангу'),
-        ('cancel', 'Отменить текущую команду'),
-    ])
+    await app.bot.set_my_commands(
+        [
+            ('start', 'Starts the bot'),
+            ('subscribe_anime', 'Подписаться на уведомления Аниме'),
+            ('subscribe_manga', 'Подписаться на уведомления по манге'),
+            ('subscriptions_anime', 'Посмотреть текущие подписки на аниме'),
+            ('subscriptions_manga', 'Посмотреть текущие подписки на мангу'),
+            ('cancel', 'Отменить текущую команду'),
+        ]
+    )
     await app.bot.set_chat_menu_button()
 
 
@@ -390,10 +447,12 @@ def main():
     subscribe_handler = ConversationHandler(
         entry_points=[CommandHandler('subscribe_anime', subscribe_anime)],
         states={
-            WAITING_FOR_TEXT: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_anime)],
+            WAITING_FOR_TEXT: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_anime)
+            ],
             WAITING_FOR_APPROVE: [
-                CallbackQueryHandler(find_more_anime, pattern="^find_more_anime$"),
-                CallbackQueryHandler(confirm_anime, pattern="^confirm_anime$"),
+                CallbackQueryHandler(find_more_anime, pattern='^find_more_anime$'),
+                CallbackQueryHandler(confirm_anime, pattern='^confirm_anime$'),
             ],
         },
         fallbacks=[
@@ -406,10 +465,12 @@ def main():
     subscribe_handler = ConversationHandler(
         entry_points=[CommandHandler('subscribe_manga', subscribe_manga)],
         states={
-            WAITING_FOR_TEXT: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_manga)],
+            WAITING_FOR_TEXT: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_manga)
+            ],
             WAITING_FOR_APPROVE: [
-                CallbackQueryHandler(find_more_manga, pattern="^find_more_manga$"),
-                CallbackQueryHandler(confirm_manga, pattern="^confirm_manga$"),
+                CallbackQueryHandler(find_more_manga, pattern='^find_more_manga$'),
+                CallbackQueryHandler(confirm_manga, pattern='^confirm_manga$'),
             ],
         },
         fallbacks=[
@@ -419,7 +480,7 @@ def main():
     )
     app.add_handler(subscribe_handler)
 
-    print("Бот запущен")
+    print('Бот запущен')
     app.run_polling()
 
 

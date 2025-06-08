@@ -2,8 +2,8 @@ import dataclasses
 
 from pydantic import BaseModel, model_validator
 
-from clients.base import JsonBaseClient
-from config import Config
+from src.clients.base import JsonBaseClient
+from src.config import Config
 
 
 class SeriesBase(BaseModel):
@@ -42,4 +42,6 @@ class MangaUpdatesClient(JsonBaseClient):
         return Series(**await self.get(f'/v1/series/{series_id}'))
 
     async def search_series(self, search_text: str) -> SearchSeriesResponse:
-        return SearchSeriesResponse(**await self.post(f'/v1/series/search', json={'search': search_text}))
+        return SearchSeriesResponse(
+            **await self.post('/v1/series/search', json={'search': search_text})
+        )

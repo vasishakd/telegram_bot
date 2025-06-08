@@ -3,7 +3,7 @@ from gql.transport.aiohttp import AIOHTTPTransport
 
 
 async def send_shikimori(text: str):
-    transport = AIOHTTPTransport(url="https://shikimori.one/api/graphql")
+    transport = AIOHTTPTransport(url='https://shikimori.one/api/graphql')
 
     # Using `async with` on the client will start a connection on the transport
     # and provide a `session` variable to execute queries on this connection

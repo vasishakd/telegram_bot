@@ -35,11 +35,15 @@ class BaseClient:
         if self._session is None:
             auth = None
             if self.base_auth_login and self.base_auth_password:
-                auth = aiohttp.BasicAuth(login=self.base_auth_login, password=self.base_auth_password)
+                auth = aiohttp.BasicAuth(
+                    login=self.base_auth_login, password=self.base_auth_password
+                )
             self._session = self.session(
                 auth=auth,
                 connector=self.connector(ssl=self.ssl),
-                timeout=aiohttp.ClientTimeout(total=self.client_timeout_total, connect=self.client_timeout_connect),
+                timeout=aiohttp.ClientTimeout(
+                    total=self.client_timeout_total, connect=self.client_timeout_connect
+                ),
                 headers=self.headers,
                 connector_owner=self.connector_owner,
             )
@@ -59,7 +63,9 @@ class BaseClient:
 
         log.debug('Request: method=%s full_url=%s params=%s', method, full_url, params)
 
-        async with self._get_session().request(method=method, url=full_url, **params) as response:
+        async with self._get_session().request(
+            method=method, url=full_url, **params
+        ) as response:
             # Базовый метод после выполнения выходит из контекста менеджера и закрывает соединения
             # и соответственно в месте вызова не получить данные если их не подгрузить заранее
             await response.read()

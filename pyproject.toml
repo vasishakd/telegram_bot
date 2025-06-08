@@ -28,6 +28,7 @@ dependencies = [
     "markupsafe==3.0.2",
     "multidict==6.4.4",
     "pip==25.1.1",
+    "pre-commit>=4.2.0",
     "propcache==0.3.1",
     "psycopg2-binary==2.9.10",
     "pydantic==2.11.4",
@@ -46,4 +47,9 @@ dependencies = [
     "uvloop==0.21.0",
     "wheel==0.45.1",
     "yarl==1.20.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11.13",
 ]
