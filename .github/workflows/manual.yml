@@ -38,10 +38,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: check
+        run: pwd && ls
       - name: Install ruff and run check/format
         uses: astral-sh/ruff-action@v3
         with:
           args: "format --check --diff"
           src: >-
-            "./src"
-            "./bot.py"
+            "src"
+            "bot.py"
