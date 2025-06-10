@@ -21,7 +21,9 @@ class ConfigENV(BaseModel):
 paths = pathlib.Path(__file__).parent.resolve()
 
 
-Config = ConfigENV(**dotenv_values(pathlib.Path(__file__).parent.resolve() / '../.env'))
+Config = ConfigENV(
+    **dotenv_values(pathlib.Path(__file__).parent.resolve() / '../../.env')
+)
 
 # apply logging level for already loaded loggers
 logging.getLogger().setLevel(Config.LOG_LEVEL)
