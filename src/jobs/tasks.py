@@ -5,6 +5,7 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import joinedload
 from telegram import Bot
 
+from src.clients import shikimori
 from src.clients.manga import MangaUpdatesClient
 from src.config import Config
 from src.db import models, enums
@@ -63,6 +64,27 @@ async def check_notifications_anime():
             ):
                 continue
 
+            shikimori_response = None
+            shikimori_anime = None
+
+            try:
+                shikimori_response = await shikimori.send_shikimori(
+                    ids=[anime.external_id]
+                )
+            except Exception:
+                log.exception('Ошибка при запросе в шикимори anime_id=%s', anime.id)
+
+            if shikimori_response:
+                try:
+                    shikimori_anime = shikimori_response['data']['animes'][0]
+                except KeyError:
+                    log.error('Ошибка в ответе шикимори: %s', shikimori_response)
+
+                if shikimori_anime:
+                    anime_locked.next_air_at = shikimori_anime['nextEpisodeAt']
+                    anime_locked.episodes_aired = shikimori_anime['episodesAired']
+                    anime_locked.episodes_number = shikimori_anime['episodes']
+
             anime_locked.last_notification_at = datetime.datetime.now()
             await session.commit()
 
@@ -108,7 +130,11 @@ async def check_notifications_manga():
             if manga_locked.status != enums.MangaStatus.airing:
                 continue
 
-            series = await manga_client.get_series(series_id=manga.external_id)
+            try:
+                series = await manga_client.get_series(series_id=manga.external_id)
+            except Exception:
+                log.exception('Ошибка при запросе в MangaUpdate manga_id=%s', manga.id)
+                continue
 
             if series.completed:
                 manga_locked.status = enums.MangaStatus.ended

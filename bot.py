@@ -71,7 +71,7 @@ async def handle_text_anime(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     animes = []
 
-    shikimori_response = await send_shikimori(user_text)
+    shikimori_response = await send_shikimori(text=user_text, limit=6)
 
     if not shikimori_response['animes']:
         await update.message.reply_text(
