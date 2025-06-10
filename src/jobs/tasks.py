@@ -76,7 +76,7 @@ async def check_notifications_anime():
 
             if shikimori_response:
                 try:
-                    shikimori_anime = shikimori_response['data']['animes'][0]
+                    shikimori_anime = shikimori_response['animes'][0]
                 except KeyError:
                     log.error('Ошибка в ответе шикимори: %s', shikimori_response)
 
