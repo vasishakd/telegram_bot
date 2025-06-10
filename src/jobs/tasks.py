@@ -81,7 +81,9 @@ async def check_notifications_anime():
                     log.error('Ошибка в ответе шикимори: %s', shikimori_response)
 
                 if shikimori_anime:
-                    anime_locked.next_air_at = shikimori_anime['nextEpisodeAt']
+                    anime_locked.next_air_at = datetime.datetime.fromisoformat(
+                        shikimori_anime['nextEpisodeAt']
+                    )
                     anime_locked.episodes_aired = shikimori_anime['episodesAired']
                     anime_locked.episodes_number = shikimori_anime['episodes']
 
