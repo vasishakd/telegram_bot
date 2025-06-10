@@ -18,7 +18,6 @@ manga_client = MangaUpdatesClient()
 
 
 def is_valid_time_for_notification() -> bool:
-    return True
     return datetime.datetime.now().time() > datetime.time(18, 0)
 
 
