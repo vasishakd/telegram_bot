@@ -280,7 +280,7 @@ async def subscriptions_anime(update: Update, context: ContextTypes.DEFAULT_TYPE
             callback_data = {
                 'subscription_id': subscription.id,
                 'action': 'unsubscribe',
-                'type': SubscriptionType.manga,
+                'type': SubscriptionType.anime,
             }
             keyboard = [
                 [
