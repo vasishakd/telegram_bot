@@ -39,7 +39,7 @@ jobs:
         key: ${{ secrets.PRIVATE_KEY }}
         port: 22
         script: |
-          cd /opt/telegram_bot
+          cd /var/www/telegram_bot
           git pull origin main
           git status
           source .venv/bin/activate
@@ -47,3 +47,4 @@ jobs:
           uv sync
           systemctl restart telegram_bot
           systemctl restart telegram_bot_jobs
+          systemctl restart web_server

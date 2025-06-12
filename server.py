@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import FastAPI, Response, Query, Request
-from starlette.responses import RedirectResponse
+from starlette.responses import RedirectResponse, HTMLResponse
 
 from src.clients import telegram_web
 from src.db.utils import init_db
@@ -9,6 +9,15 @@ from src.schemas.web import LoginTelegramParams
 
 app = FastAPI()
 Session = init_db()
+
+@app.get("/login")
+async def login() -> HTMLResponse:
+    file = open("resources/index.html", "r")
+    content = file.read()
+    file.close()
+
+    return HTMLResponse(content=content, status_code=200)
+
 
 @app.get("/login/telegram")
 async def login_telegram(
