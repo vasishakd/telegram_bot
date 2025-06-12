@@ -1,4 +1,3 @@
-version: '3'
 services:
 
   postgres:
@@ -12,3 +11,23 @@ services:
       - '5432:5432'
     command: -c fsync=off -c full_page_writes=off
     tmpfs: /var/lib/postgresql/data
+
+  app:
+    stdin_open: true
+    tty: true
+    volumes:
+      - ".:/opt"
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+  server:
+    volumes:
+      - ".:/opt"
+    ports:
+      - '8000:8000'
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["fastapi", "dev", "server.py", "--host", "0.0.0.0"]
+
