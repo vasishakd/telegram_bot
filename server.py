@@ -1,3 +1,4 @@
+import json
 from typing import Annotated
 
 from fastapi import FastAPI, Response, Query, Request
@@ -24,8 +25,8 @@ async def login_telegram(
     params: Annotated[LoginTelegramParams, Query()],
     response: Response,
 ) -> RedirectResponse:
-    auth_data = telegram_web.check_telegram_authorization(auth_data=params)
-    response.set_cookie(key="tg_user", value=auth_data.json())
+    auth_data = telegram_web.check_telegram_authorization(auth_data=params.dict())
+    response.set_cookie(key="tg_user", value=json.dumps(auth_data))
 
     return RedirectResponse("/")
 
