@@ -92,7 +92,7 @@ class User(Base):
         back_populates='user'
     )
     sessions: Mapped[list['UserSession']] = relationship(back_populates='user')
-    image_url: Mapped[str] = mapped_column(Text(), null=True)
+    image_url: Mapped[str] = mapped_column(Text(), nullable=True)
 
 
 class Subscription(Base):
