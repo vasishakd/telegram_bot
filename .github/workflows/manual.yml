@@ -40,7 +40,6 @@ jobs:
         port: 22
         script: |
           set -e
-          . ~/.bashrc
           cd /var/www/telegram_bot
           git pull origin main
           source .venv/bin/activate

@@ -9,7 +9,7 @@ from src.clients import shikimori
 from src.clients.manga import MangaUpdatesClient
 from src.config import Config
 from src.db import models, enums
-from src.jobs.run import Session
+from jobs import Session
 from src.jobs.utils import periodic_task_run
 
 log = logging.getLogger(__name__)
