@@ -39,13 +39,14 @@ jobs:
         key: ${{ secrets.PRIVATE_KEY }}
         port: 22
         script: |
+          set -e
           cd /var/www/telegram_bot
           git pull origin main
-          git status
           source .venv/bin/activate
           alembic upgrade head
           uv sync
           cd front
+          npm install
           npm run build
           systemctl restart telegram_bot
           systemctl restart telegram_bot_jobs

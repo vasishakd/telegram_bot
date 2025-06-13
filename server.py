@@ -31,14 +31,14 @@ app.include_router(api.router)
 
 
 @app.get('/login')
-async def login() -> FileResponse:
+async def login():
     return FileResponse('./resources/index.html')
 
 
 @app.get('/login/telegram')
 async def login_telegram(
     params: Annotated[LoginTelegramParams, Query()],
-) -> RedirectResponse:
+):
     auth_data = None
     try:
         auth_data = telegram_web.check_telegram_authorization(
@@ -79,7 +79,7 @@ async def login_telegram(
 
 
 @app.get('/')
-async def root(request: Request) -> FileResponse | RedirectResponse:
+async def root(request: Request):
     async with Session() as session:
         user_session = await get_user_session(request=request, session=session)
 
