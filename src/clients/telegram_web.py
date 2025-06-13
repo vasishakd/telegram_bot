@@ -11,9 +11,8 @@ class TelegramAuthException(Exception):
 
 def check_telegram_authorization(auth_data: dict) -> dict:
     check_hash = auth_data.pop('hash', None)
-    data_check_arr = [
-        f'{key}={auth_data[key]}' for key in sorted(auth_data) if key is not None
-    ]
+    data_check_arr = [f'{key}={auth_data[key]}' for key in auth_data]
+    data_check_arr = sorted(data_check_arr)
     data_check_string = '\n'.join(data_check_arr)
     secret_key = hashlib.sha256(Config.BOT_TOKEN.encode()).digest()
     hash_bytes = hmac.new(

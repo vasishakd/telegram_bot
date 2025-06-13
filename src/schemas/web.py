@@ -7,6 +7,5 @@ class LoginTelegramParams(BaseModel):
     last_name: str | None = None
     username: str | None = None
     photo_url: str | None = None
-    userpic: str | None = None
     auth_date: int
     hash: str

@@ -92,6 +92,7 @@ class User(Base):
         back_populates='user'
     )
     sessions: Mapped[list['UserSession']] = relationship(back_populates='user')
+    image_url: Mapped[str] = mapped_column(Text(), null=True)
 
 
 class Subscription(Base):
@@ -196,7 +197,12 @@ class UserSession(Base):
 
     @classmethod
     async def get_session(cls, session: AsyncSession, session_id: UUID):
-        query = select(cls).where(cls.id == session_id).options(joinedload(cls.user))
+        query = (
+            select(cls)
+            .where(cls.id == session_id)
+            .options(joinedload(cls.user))
+            .order_by(cls.created_at.desc())
+        )
         session_obj = (await session.scalars(query)).one_or_none()
 
         if session_obj and session_obj.expires_at > datetime.now():

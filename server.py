@@ -1,8 +1,7 @@
 import datetime
 import logging
-from typing import Annotated
 
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, Request
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse, FileResponse
 from starlette.staticfiles import StaticFiles
@@ -11,7 +10,6 @@ from src.clients import telegram_web
 from src.clients.telegram_web import TelegramAuthException
 from src.db import models
 from src.db.utils import init_db
-from src.schemas.web import LoginTelegramParams
 from src.utils import get_user_session
 from src.web.routers import api
 
@@ -37,13 +35,11 @@ async def login():
 
 @app.get('/login/telegram')
 async def login_telegram(
-    params: Annotated[LoginTelegramParams, Query()],
+    request: Request,
 ):
-    auth_data = None
+    auth_data = dict(request.query_params)
     try:
-        auth_data = telegram_web.check_telegram_authorization(
-            auth_data=params.model_dump()
-        )
+        auth_data = telegram_web.check_telegram_authorization(auth_data=auth_data)
     except TelegramAuthException:
         log.exception('Check telegram authorization error')
 
@@ -51,19 +47,26 @@ async def login_telegram(
         return RedirectResponse('/login')
 
     async with Session() as session:
-        user, _ = await models.User.get_or_create(
+        name = f'{auth_data.get("first_name", "")} {auth_data.get("last_name", "")} / {auth_data.get("username", "")}'
+        user, is_new = await models.User.get_or_create(
             session=session,
-            telegram_id=str(params.id),
+            telegram_id=str(auth_data['id']),
             defaults={
-                'name': f'{params.first_name} {params.last_name}',
+                'name': name,
+                'image_url': auth_data.get('photo_url'),
             },
         )
+        if not is_new:
+            user.name = name
+            user.image_url = auth_data.get('photo_url')
+
         user_session = await models.UserSession.create(
             session=session,
             user_id=user.id,
             data=auth_data,
             expires_at=datetime.datetime.now() + datetime.timedelta(days=30),
         )
+        await session.commit()
 
     response = RedirectResponse('/')
     response.set_cookie(
