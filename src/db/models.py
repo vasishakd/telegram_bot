@@ -1,6 +1,7 @@
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Type, Self
+from uuid import UUID, uuid4
 
 from sqlalchemy import (
     ForeignKey,
@@ -9,11 +10,12 @@ from sqlalchemy import (
     select,
     func,
     UniqueConstraint,
-    Text,
+    Text, TIMESTAMP,
 )
 from sqlalchemy import String
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, joinedload
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -68,16 +70,27 @@ class Base(DeclarativeBase):
         await session.delete(self)
         await session.commit()
 
+    @classmethod
+    async def create(cls: Type[Self], session: AsyncSession, **kwargs) -> Self:
+        result = cls(**kwargs)
+
+        session.add(result)
+        await session.commit()
+
+        return result
+
 
 class User(Base):
     __tablename__ = 'user'
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(), nullable=True)
     telegram_id: Mapped[str] = mapped_column(String(), unique=True)
     subscriptions: Mapped[list['Subscription']] = relationship(back_populates='user')
     subscriptions_manga: Mapped[list['SubscriptionManga']] = relationship(
         back_populates='user'
     )
+    sessions: Mapped[list['UserSession']] = relationship(back_populates='user')
 
 
 class Subscription(Base):
@@ -161,3 +174,27 @@ class Manga(Base):
     status: Mapped[enums.MangaStatus] = mapped_column(
         String(), default=enums.MangaStatus.airing
     )
+
+
+class UserSession(Base):
+    __tablename__ = 'usersession'
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    user_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
+    user: Mapped['User'] = relationship(back_populates='sessions')
+    data: Mapped[dict] = mapped_column(JSONB, nullable=True)
+    expires_at: Mapped[datetime] = mapped_column(TIMESTAMP)
+
+    @classmethod
+    async def get_session(cls, session: AsyncSession, session_id: UUID):
+        query = (
+            select(cls).where(cls.id == session_id)
+            .options(
+                joinedload(cls.user)
+            )
+        )
+        session_obj = (await session.scalars(query)).one()
+
+        if session_obj and session_obj.expires_at > datetime.now():
+            return session_obj
+        return None

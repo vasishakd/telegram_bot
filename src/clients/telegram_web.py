@@ -5,7 +5,11 @@ import time
 from src.config import Config
 
 
-def check_telegram_authorization(auth_data: dict):
+class TelegramAuthException(Exception):
+    pass
+
+
+def check_telegram_authorization(auth_data: dict) -> dict:
     check_hash = auth_data.pop('hash', None)
     data_check_arr = [f'{key}={auth_data[key]}' for key in sorted(auth_data)]
     data_check_string = '\n'.join(data_check_arr)
@@ -15,9 +19,9 @@ def check_telegram_authorization(auth_data: dict):
     ).hexdigest()
 
     if hash_bytes != check_hash:
-        raise Exception('Data is NOT from Telegram')
+        raise TelegramAuthException('Data is NOT from Telegram')
 
     if time.time() - int(auth_data['auth_date']) > 86400:
-        raise Exception('Data is outdated')
+        raise TelegramAuthException('Data is outdated')
 
     return auth_data
