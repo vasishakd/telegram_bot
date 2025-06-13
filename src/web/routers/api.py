@@ -49,3 +49,17 @@ async def subscriptions(request: Request):
         )
 
     return result
+
+
+@router.get('/user')
+async def user(request: Request):
+    async with Session() as session:
+        user_session = await get_user_session(session=session, request=request)
+
+    if not user_session:
+        return HTTPException(status_code=403, detail='Forbidden')
+
+    return {
+        'name': user_session.user.name,
+        'image': user_session.user.image_url,
+    }
