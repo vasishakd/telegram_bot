@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Search, Bell, Star, PlusCircle } from "lucide-react";
+import { Search, Star } from "lucide-react";
 
 const Dashboard = () => {
    const [subscriptions, setSubscriptions] = useState([]);
+   const [user, setUser] = useState(null);
    useEffect(() => {
     fetch("/api/subscriptions", {
       method: "GET",
@@ -16,7 +17,21 @@ const Dashboard = () => {
       .catch((err) => {
         console.error(err);
       });
+
+    fetch("/api/user", {
+      method: "GET",
+      credentials: "include",
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Unauthorized");
+        return res.json();
+      })
+      .then((data) => setUser(data))
+      .catch((err) => {
+        console.error(err);
+      });
   }, []);
+
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
@@ -30,17 +45,16 @@ const Dashboard = () => {
             className="bg-gray-800 border-none text-white p-2 rounded"
           />
         </div>
-        <div className="flex items-center space-x-4">
-          <Bell className="text-white" />
-          <button className="flex items-center bg-gray-700 px-3 py-1 rounded hover:bg-gray-600">
-            <PlusCircle className="mr-2" /> Add
-          </button>
-          <img
-            src="https://via.placeholder.com/40"
-            alt="User Avatar"
-            className="rounded-full w-10 h-10"
-          />
-        </div>
+        {user && (
+            <div className="flex items-center space-x-2">
+              <span className="text-sm">{user.name}</span>
+              <img
+                src={user.image || "/static/images/default-avatar.png"}
+                alt="User Avatar"
+                className="rounded-full w-10 h-10"
+              />
+            </div>
+          )}
       </div>
 
       {/* Subscriptions Grid */}
