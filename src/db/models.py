@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Type, Self
 from uuid import UUID, uuid4
 
@@ -10,7 +10,8 @@ from sqlalchemy import (
     select,
     func,
     UniqueConstraint,
-    Text, TIMESTAMP,
+    Text,
+    TIMESTAMP,
 )
 from sqlalchemy import String
 from sqlalchemy.dialects.postgresql import JSONB
@@ -187,12 +188,7 @@ class UserSession(Base):
 
     @classmethod
     async def get_session(cls, session: AsyncSession, session_id: UUID):
-        query = (
-            select(cls).where(cls.id == session_id)
-            .options(
-                joinedload(cls.user)
-            )
-        )
+        query = select(cls).where(cls.id == session_id).options(joinedload(cls.user))
         session_obj = (await session.scalars(query)).one()
 
         if session_obj and session_obj.expires_at > datetime.now():
