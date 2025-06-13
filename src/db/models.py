@@ -109,8 +109,12 @@ class Subscription(Base):
     async def list_by_user_id(
         cls, session: AsyncSession, user_id: str
     ) -> Sequence['Subscription']:
-        query = select(cls).join(cls.user).where(User.telegram_id == user_id)
-
+        query = (
+            select(cls)
+            .join(cls.user)
+            .where(User.telegram_id == user_id)
+            .options(joinedload(cls.anime))
+        )
         result = await session.scalars(query)
 
         return result.all()
@@ -131,8 +135,12 @@ class SubscriptionManga(Base):
     async def list_by_user_id(
         cls, session: AsyncSession, user_id: str
     ) -> Sequence['SubscriptionManga']:
-        query = select(cls).join(cls.user).where(User.telegram_id == user_id)
-
+        query = (
+            select(cls)
+            .join(cls.user)
+            .where(User.telegram_id == user_id)
+            .options(joinedload(cls.manga))
+        )
         result = await session.scalars(query)
 
         return result.all()
@@ -189,7 +197,7 @@ class UserSession(Base):
     @classmethod
     async def get_session(cls, session: AsyncSession, session_id: UUID):
         query = select(cls).where(cls.id == session_id).options(joinedload(cls.user))
-        session_obj = (await session.scalars(query)).one()
+        session_obj = (await session.scalars(query)).one_or_none()
 
         if session_obj and session_obj.expires_at > datetime.now():
             return session_obj

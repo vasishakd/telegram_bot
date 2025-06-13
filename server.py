@@ -1,42 +1,54 @@
 import datetime
 import logging
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import FastAPI, Query, Request
-from starlette.responses import RedirectResponse, HTMLResponse
+from starlette.middleware.cors import CORSMiddleware
+from starlette.responses import RedirectResponse, FileResponse
+from starlette.staticfiles import StaticFiles
 
 from src.clients import telegram_web
 from src.clients.telegram_web import TelegramAuthException
 from src.db import models
 from src.db.utils import init_db
 from src.schemas.web import LoginTelegramParams
+from src.utils import get_user_session
+from src.web.routers import api
 
 log = logging.getLogger(__name__)
-app = FastAPI()
 Session = init_db()
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
+app.mount('/static', StaticFiles(directory='./front/build/static'), name='static')
 
-@app.get("/login")
-async def login() -> HTMLResponse:
-    file = open("resources/index.html", "r")
-    content = file.read()
-    file.close()
-
-    return HTMLResponse(content=content, status_code=200)
+app.include_router(api.router)
 
 
-@app.get("/login/telegram")
+@app.get('/login')
+async def login() -> FileResponse:
+    return FileResponse('./resources/index.html')
+
+
+@app.get('/login/telegram')
 async def login_telegram(
     params: Annotated[LoginTelegramParams, Query()],
 ) -> RedirectResponse:
     auth_data = None
     try:
-        auth_data = telegram_web.check_telegram_authorization(auth_data=params.model_dump())
+        auth_data = telegram_web.check_telegram_authorization(
+            auth_data=params.model_dump()
+        )
     except TelegramAuthException:
         log.exception('Check telegram authorization error')
 
     if not auth_data:
-        return RedirectResponse('/')
+        return RedirectResponse('/login')
 
     async with Session() as session:
         user, _ = await models.User.get_or_create(
@@ -44,7 +56,7 @@ async def login_telegram(
             telegram_id=str(params.id),
             defaults={
                 'name': f'{params.first_name} {params.last_name}',
-            }
+            },
         )
         user_session = await models.UserSession.create(
             session=session,
@@ -58,22 +70,20 @@ async def login_telegram(
         key='session_id',
         value=str(user_session.id),
         httponly=True,
-        # secure=True,
+        secure=True,
         max_age=60 * 60 * 24 * 30,
-        samesite="lax",
+        samesite='lax',
     )
 
     return response
 
 
-@app.get("/")
-async def root(request: Request):
-    session_id = request.cookies.get('session_id')
-
-    if not session_id:
-        return {'foo': 'bar'}
-
+@app.get('/')
+async def root(request: Request) -> FileResponse | RedirectResponse:
     async with Session() as session:
-        user_session = await models.UserSession.get_session(session=session, session_id=UUID(session_id))
+        user_session = await get_user_session(request=request, session=session)
 
-    return {"tg_user": user_session.user.name}
+    if not user_session:
+        return RedirectResponse('/login')
+
+    return FileResponse('./front/build/index.html')

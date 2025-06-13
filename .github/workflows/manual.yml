@@ -19,9 +19,9 @@ jobs:
         with:
           args: "--version"
       - name: Run ruff check
-        run: ruff check ./src ./bot.py
+        run: ruff check ./src ./bot.py ./server.py
       - name: Run ruff format
-        run: ruff format --check --diff ./src ./bot.py
+        run: ruff format --check --diff ./src ./bot.py ./server.py
 
   # This workflow contains a single job called "build"
   build:
@@ -45,6 +45,8 @@ jobs:
           source .venv/bin/activate
           alembic upgrade head
           uv sync
+          cd front
+          npm run build
           systemctl restart telegram_bot
           systemctl restart telegram_bot_jobs
           systemctl restart web_server

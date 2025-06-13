@@ -2,3 +2,4 @@
 .venv/
 .idea/
 requirements.txt
+__pycache__
