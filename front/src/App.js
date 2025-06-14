@@ -30,7 +30,23 @@ const Dashboard = () => {
       .catch((err) => {
         console.error(err);
       });
-  }, []);
+    }, []);
+
+   const handleCancel = async (subId) => {
+    try {
+      const response = await fetch(`/api/subscriptions/${subId}/cancel`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to cancel subscription");
+      }
+      // Refresh list after cancellation
+      setSubscriptions(subscriptions.filter((sub) => sub.id !== subId));
+    } catch (error) {
+      console.error("Error cancelling subscription:", error);
+    }
+  };
 
 
   return (
@@ -77,17 +93,19 @@ const Dashboard = () => {
                             <h2 className="text-lg font-semibold mb-1">{sub.title}</h2>
                             <p className="text-sm text-gray-400 mb-2">{sub.type}</p>
                             <p className="text-sm mb-2">{sub.progress}</p>
-                <div className="flex justify-between items-center">
-                  <button className="text-sm bg-gray-600 px-2 py-1 rounded hover:bg-gray-500">
-                    Update
-                  </button>
-                  <Star className="text-yellow-400 cursor-pointer" />
+                            <div className="flex justify-between items-center">
+                                <button
+                                    onClick={() => handleCancel(sub.id)}
+                                    className="text-sm bg-red-600 px-2 py-1 rounded hover:bg-red-500"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+            ))}
+        </div>
     </div>
   );
 };

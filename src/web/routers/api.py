@@ -1,21 +1,20 @@
-from fastapi import APIRouter, HTTPException, Request
+from typing import Annotated
+
+from fastapi import APIRouter
+from fastapi.params import Depends
 
 from src.db import models
 from src.db.utils import init_db
-from src.utils import get_user_session
+from src.utils import require_user_session
 
 router = APIRouter(prefix='/api')
 Session = init_db()
 
 
 @router.get('/subscriptions')
-async def subscriptions(request: Request):
-    async with Session() as session:
-        user_session = await get_user_session(session=session, request=request)
-
-    if not user_session:
-        return HTTPException(status_code=403, detail='Forbidden')
-
+async def subscriptions(
+    user_session: Annotated[models.UserSession, Depends(require_user_session)],
+):
     async with Session() as session:
         subscriptions_anime = await models.Subscription.list_by_user_id(
             session=session, user_id=user_session.user.telegram_id
@@ -52,12 +51,25 @@ async def subscriptions(request: Request):
 
 
 @router.get('/user')
-async def user(request: Request):
-    async with Session() as session:
-        user_session = await get_user_session(session=session, request=request)
+async def user(
+    user_session: Annotated[models.UserSession, Depends(require_user_session)],
+):
+    return {
+        'name': user_session.user.name,
+        'image': user_session.user.image_url,
+    }
 
-    if not user_session:
-        return HTTPException(status_code=403, detail='Forbidden')
+
+@router.post('/subscriptions/{subscription_id}/cancel')
+async def cancel(
+    subscription_id: int,
+    user_session: Annotated[models.UserSession, Depends(require_user_session)],
+):
+    async with Session() as session:
+        subscription = await models.Subscription.get(
+            id=subscription_id, session=session
+        )
+        await subscription.delete(session)
 
     return {
         'name': user_session.user.name,

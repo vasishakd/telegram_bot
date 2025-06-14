@@ -8,13 +8,11 @@ from starlette.staticfiles import StaticFiles
 
 from src.clients import telegram_web
 from src.clients.telegram_web import TelegramAuthException
-from src.db import models
-from src.db.utils import init_db
+from src.db import models, Session
 from src.utils import get_user_session
 from src.web.routers import api
 
 log = logging.getLogger(__name__)
-Session = init_db()
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -82,7 +80,9 @@ async def login_telegram(
 
 
 @app.get('/')
-async def root(request: Request):
+async def root(
+    request: Request,
+):
     async with Session() as session:
         user_session = await get_user_session(request=request, session=session)
 

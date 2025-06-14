@@ -196,7 +196,7 @@ class UserSession(Base):
     expires_at: Mapped[datetime] = mapped_column(TIMESTAMP)
 
     @classmethod
-    async def get_session(cls, session: AsyncSession, session_id: UUID):
+    async def get_session(cls, session: AsyncSession, session_id: UUID) -> Self:
         query = (
             select(cls)
             .where(cls.id == session_id)
