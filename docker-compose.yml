@@ -7,10 +7,12 @@ services:
       - POSTGRES_USER=imsolnce
       - POSTGRES_DB=imsolnce
       - TZ=Asia/Yekaterinburg
+      - PGDATA=/var/lib/postgresql/data/pgdata
     ports:
       - '5432:5432'
     command: -c fsync=off -c full_page_writes=off
-    tmpfs: /var/lib/postgresql/data
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data/pgdata
 
   app:
     stdin_open: true
@@ -31,3 +33,7 @@ services:
       dockerfile: Dockerfile
     command: ["fastapi", "dev", "server.py", "--host", "0.0.0.0"]
 
+
+volumes:
+  pgdata:
+    driver: local

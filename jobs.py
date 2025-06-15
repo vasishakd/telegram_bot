@@ -1,27 +1,35 @@
 import asyncio
 import logging
+from contextlib import asynccontextmanager
 
-import uvloop
+from fastapi import FastAPI
 
-from src.db import utils as db_utils
 from src.jobs import tasks
 
 log = logging.getLogger(__name__)
 
-Session = db_utils.init_db()
+
+tasks_list = []
 
 
-# noinspection PyAsyncCall
-async def main():
-    asyncio.create_task(tasks.check_notifications_anime())
-    asyncio.create_task(tasks.check_notifications_manga())
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    log.info('🔄 Starting background tasks')
+
+    tasks_list.append(asyncio.create_task(tasks.check_notifications_anime()))
+    tasks_list.append(asyncio.create_task(tasks.check_notifications_manga()))
+
+    yield  # run app
+
+    log.info('🛑 Shutting down background tasks')
+    for task in tasks_list:
+        task.cancel()
 
 
-if __name__ == '__main__':
-    uvloop.install()
+# Create app
+app = FastAPI(lifespan=lifespan)
 
-    log.info('Init db')
 
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
-    loop.run_forever()
+@app.get('/health')
+async def root():
+    return {'status': 'Fok'}

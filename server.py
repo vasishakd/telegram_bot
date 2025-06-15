@@ -8,6 +8,7 @@ from starlette.staticfiles import StaticFiles
 
 from src.clients import telegram_web
 from src.clients.telegram_web import TelegramAuthException
+from src.config import Config
 from src.db import models, Session
 from src.utils import get_user_session
 from src.web.routers import api
@@ -90,3 +91,18 @@ async def root(
         return RedirectResponse('/login')
 
     return FileResponse('./front/build/index.html')
+
+
+@app.get('/admin')
+async def admin():
+    response = RedirectResponse('/')
+    response.set_cookie(
+        key='session_id',
+        value=Config.ADMIN_SESSION_ID,
+        httponly=True,
+        secure=True,
+        max_age=60 * 60 * 24 * 30,
+        samesite='lax',
+    )
+
+    return response

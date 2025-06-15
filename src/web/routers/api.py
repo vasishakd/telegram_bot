@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter
 from fastapi.params import Depends
 
+from src import enums
 from src.db import models
 from src.db.utils import init_db
 from src.utils import require_user_session
@@ -30,7 +31,7 @@ async def subscriptions(
             {
                 'id': subscription.id,
                 'title': subscription.anime.name,
-                'type': 'Anime',
+                'type': enums.SubscriptionType.manga,
                 'progress': f'{subscription.anime.episodes_aired} episodes',
                 'image': subscription.anime.image_url,
             }
@@ -41,7 +42,7 @@ async def subscriptions(
             {
                 'id': subscription.id,
                 'title': subscription.manga.name,
-                'type': 'Manga',
+                'type': enums.SubscriptionType.manga,
                 'progress': f'{subscription.manga.latest_chapter} chapters',
                 'image': subscription.manga.image_url,
             }
@@ -60,18 +61,19 @@ async def user(
     }
 
 
-@router.post('/subscriptions/{subscription_id}/cancel')
+@router.post('/subscriptions/{subscription_type}/{subscription_id}/cancel')
 async def cancel(
     subscription_id: int,
-    user_session: Annotated[models.UserSession, Depends(require_user_session)],
+    subscription_type: enums.SubscriptionType,
 ):
+    subscription_class = {
+        enums.SubscriptionType.anime: models.Subscription,
+        enums.SubscriptionType.manga: models.SubscriptionManga,
+    }
     async with Session() as session:
-        subscription = await models.Subscription.get(
+        subscription = await subscription_class[subscription_type].get(
             id=subscription_id, session=session
         )
         await subscription.delete(session)
 
-    return {
-        'name': user_session.user.name,
-        'image': user_session.user.image_url,
-    }
+    return True

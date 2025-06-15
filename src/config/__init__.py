@@ -12,6 +12,7 @@ class ConfigENV(BaseModel):
     DB_NAME: str
     DB_USER: str
     BOT_TOKEN: str
+    ADMIN_SESSION_ID: str | None = Field(default=None)
     LOG_LEVEL: str = Field(default='DEBUG')
     NOTIFICATION_PERIOD_ANIME: int | None = Field(default=60 * 15)
     NOTIFICATION_PERIOD_MANGA: int | None = Field(default=60 * 60)
