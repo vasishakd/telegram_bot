@@ -14,16 +14,22 @@ tasks_list = []
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    log.info('🔄 Starting background tasks')
+    log.debug('🔄 Starting background tasks')
 
-    tasks_list.append(asyncio.create_task(tasks.check_notifications_anime()))
-    tasks_list.append(asyncio.create_task(tasks.check_notifications_manga()))
+    app.state._tasks = [
+        asyncio.create_task(tasks.check_notifications_anime()),
+        asyncio.create_task(tasks.check_notifications_manga()),
+    ]
 
     yield  # run app
 
-    log.info('🛑 Shutting down background tasks')
-    for task in tasks_list:
+    log.debug(f'Shutting down background tasks {app.state._tasks}')
+    for task in app.state._tasks:
         task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            log.debug('Task cancelled cleanly')
 
 
 # Create app

@@ -16,7 +16,7 @@ def periodic_task_run(sleep: int):
                 except Exception as e:
                     log.error('Get exception when process task %s', e, exc_info=True)
 
-            log.info('Running job "%s"', coro.__name__)
+            log.debug('Running job "%s"', coro.__name__)
             if not sleep:
                 await _run(*args, **kwargs)
                 return

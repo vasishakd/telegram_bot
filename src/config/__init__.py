@@ -1,4 +1,5 @@
 import logging
+import sys
 
 from dotenv import dotenv_values
 from pydantic import BaseModel, Field
@@ -26,5 +27,8 @@ Config = ConfigENV(
     **dotenv_values(pathlib.Path(__file__).parent.resolve() / '../../.env')
 )
 
-# apply logging level for already loaded loggers
-logging.getLogger().setLevel(Config.LOG_LEVEL)
+logging.basicConfig(
+    level=Config.LOG_LEVEL,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)],
+)

@@ -1,6 +1,5 @@
 import datetime
 import json
-import logging
 from enum import StrEnum
 
 from pydantic import BaseModel
@@ -22,11 +21,6 @@ from src.clients.shikimori import send_shikimori
 from src.config import Config
 from src.db import models, enums
 from src.db.utils import init_db
-
-# Включаем логирование
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
-)
 
 WAITING_FOR_TEXT = 1
 WAITING_FOR_APPROVE = 2
