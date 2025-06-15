@@ -42,7 +42,7 @@ const Dashboard = () => {
         throw new Error("Failed to cancel subscription");
       }
       // Refresh list after cancellation
-      setSubscriptions(subscriptions.filter((sub) => sub.id !== subId));
+      setSubscriptions(subscriptions.filter((sub) => sub.id !== subId && sub.type !== sub.type));
     } catch (error) {
       console.error("Error cancelling subscription:", error);
     }
