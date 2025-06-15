@@ -31,9 +31,10 @@ async def subscriptions(
             {
                 'id': subscription.id,
                 'title': subscription.anime.name,
-                'type': enums.SubscriptionType.manga,
-                'progress': f'{subscription.anime.episodes_aired} episodes',
+                'type': enums.SubscriptionType.anime,
+                'progress': f'{subscription.anime.episodes_aired or subscription.anime.episodes_number} episodes',
                 'image': subscription.anime.image_url,
+                'url': subscription.anime.site_url,
             }
         )
 
@@ -45,6 +46,7 @@ async def subscriptions(
                 'type': enums.SubscriptionType.manga,
                 'progress': f'{subscription.manga.latest_chapter} chapters',
                 'image': subscription.manga.image_url,
+                'url': subscription.manga.site_url,
             }
         )
 

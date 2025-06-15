@@ -32,9 +32,9 @@ const Dashboard = () => {
       });
     }, []);
 
-   const handleCancel = async (subId) => {
+   const handleCancel = async (subId, subType) => {
     try {
-      const response = await fetch(`/api/subscriptions/${subId}/cancel`, {
+      const response = await fetch(`/api/subscriptions/${subType}/${subId}/cancel`, {
         method: "POST",
         credentials: "include",
       });
@@ -84,18 +84,27 @@ const Dashboard = () => {
             {subscriptions.map((sub) => (
                 <div key={sub.id} className="bg-gray-800 rounded shadow-md">
                     <div className="p-4 flex space-x-4">
-                        <img
-                            src={sub.image}
-                            alt={sub.title}
-                            className="w-24 h-36 object-cover rounded"
-                        />
+                        <a href={sub.url} target="_blank" rel="noopener noreferrer">
+                            <img
+                                src={sub.image}
+                                alt={sub.title}
+                                className="w-24 h-36 object-cover rounded hover:opacity-90 transition-opacity"
+                            />
+                        </a>
                         <div className="flex-1">
-                            <h2 className="text-lg font-semibold mb-1">{sub.title}</h2>
+                            <a
+                                href={sub.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-lg font-semibold mb-1 hover:underline block"
+                            >
+                                {sub.title}
+                            </a>
                             <p className="text-sm text-gray-400 mb-2">{sub.type}</p>
                             <p className="text-sm mb-2">{sub.progress}</p>
                             <div className="flex justify-between items-center">
                                 <button
-                                    onClick={() => handleCancel(sub.id)}
+                                    onClick={() => handleCancel(sub.id, sub.type)}
                                     className="text-sm bg-red-600 px-2 py-1 rounded hover:bg-red-500"
                                 >
                                     Cancel
