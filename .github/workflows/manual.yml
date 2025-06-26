@@ -19,9 +19,9 @@ jobs:
         with:
           args: "--version"
       - name: Run ruff check
-        run: ruff check ./src ./bot.py ./server.py
+        run: ruff check ./src ./bot.py ./server.py ./jobs.py
       - name: Run ruff format
-        run: ruff format --check --diff ./src ./bot.py ./server.py
+        run: ruff format --check --diff ./src ./bot.py ./server.py ./jobs.py
 
   # This workflow contains a single job called "build"
   build:
@@ -49,5 +49,5 @@ jobs:
           npm install
           npm run build
           systemctl restart telegram_bot
-          systemctl restart telegram_bot_jobs
-          systemctl restart web_server
+          systemctl restart telegram
+          systemctl restart fastapi_server

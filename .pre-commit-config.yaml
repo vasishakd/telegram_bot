@@ -5,7 +5,7 @@ repos:
   hooks:
     # Run the linter.
     - id: ruff-check
-      args: ["src/", "bot.py", "server.py"]
+      args: ["src/", "bot.py", "server.py", "jobs.py"]
     # Run the formatter.
     - id: ruff-format
-      args: ["src/", "bot.py", "server.py"]
+      args: ["src/", "bot.py", "server.py", "jobs.py"]
