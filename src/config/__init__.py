@@ -13,6 +13,10 @@ class ConfigENV(BaseModel):
     DB_NAME: str
     DB_USER: str
     BOT_TOKEN: str
+    RABBITMQ_LOGIN: str | None = Field(default=None)
+    RABBITMQ_PASSWORD: str | None = Field(default=None)
+    RABBITMQ_HOST: str | None = Field(default='localhost')
+    RABBITMQ_PORT: int | None = Field(default=5672)
     ADMIN_SESSION_ID: str | None = Field(default=None)
     LOG_LEVEL: str = Field(default='DEBUG')
     NOTIFICATION_PERIOD_ANIME: int | None = Field(default=60 * 15)

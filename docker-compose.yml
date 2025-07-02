@@ -33,7 +33,21 @@ services:
       dockerfile: Dockerfile
     command: ["fastapi", "dev", "server.py", "--host", "0.0.0.0"]
 
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: rabbitmq
+    ports:
+      - 5672:5672
+      - 15672:15672
+      - 15671:15671
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+configs:
+  rabbitmq-plugins:
+    content: "[rabbitmq_management]."
 
 volumes:
   pgdata:
     driver: local
+  rabbitmq_data:
