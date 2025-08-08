@@ -1,14 +1,16 @@
 import datetime
 import logging
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update
 from sqlalchemy.orm import joinedload
 from telegram import Bot
 
 from src.clients import shikimori
+from src.clients.currency import CurrencyExchangeClient
 from src.clients.manga import MangaUpdatesClient
 from src.config import Config
 from src.db import models, enums, Session
+from src.enums import Currency
 from src.jobs.utils import periodic_task_run
 
 log = logging.getLogger(__name__)
@@ -19,6 +21,48 @@ manga_client = MangaUpdatesClient()
 
 def is_valid_time_for_notification() -> bool:
     return datetime.datetime.now().time() > datetime.time(18, 0)
+
+
+@periodic_task_run(sleep=Config.CURRENCY_EXCHANGE_GET_PERIOD)
+async def get_currency_exchange_rates():
+    currency_client = CurrencyExchangeClient()
+
+    currency_exchanges = []
+
+    async with Session() as session:
+        settings = await models.Settings.get(id=Config.SETTINGS_ID, session=session)
+
+    exchange_rates = await currency_client.get_exchange(currency=Currency.USD)
+    last_update_at = datetime.datetime.fromtimestamp(
+        exchange_rates.time_last_update_unix
+    )
+    if last_update_at <= settings.currency_update_at:
+        return
+
+    for currency in list(Currency):
+        currency: Currency
+        exchange_rates = await currency_client.get_exchange(currency=currency)
+
+        currency_exchanges.append(
+            models.CurrencyExchange(
+                date_at=datetime.datetime.fromtimestamp(
+                    exchange_rates.time_last_update_unix
+                ),
+                currency=currency,
+                rates=exchange_rates.conversion_rates,
+            )
+        )
+
+    async with Session() as session:
+        update_settings_query = (
+            update(models.Settings)
+            .where(models.Settings.id == Config.SETTINGS_ID)
+            .values(currency_update_at=last_update_at)
+        )
+        await session.execute(update_settings_query)
+
+        session.add_all(currency_exchanges)
+        await session.commit()
 
 
 @periodic_task_run(sleep=Config.NOTIFICATION_PERIOD_ANIME)

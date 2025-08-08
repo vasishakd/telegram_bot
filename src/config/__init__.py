@@ -19,9 +19,15 @@ class ConfigENV(BaseModel):
     RABBITMQ_PORT: int | None = Field(default=5672)
     ADMIN_SESSION_ID: str | None = Field(default=None)
     LOG_LEVEL: str = Field(default='DEBUG')
+    CURRENCY_EXCHANGE_GET_PERIOD: int | None = Field(default=60 * 60)
     NOTIFICATION_PERIOD_ANIME: int | None = Field(default=60 * 15)
     NOTIFICATION_PERIOD_MANGA: int | None = Field(default=60 * 60)
     MANGA_UPDATES_URL: str | None = Field(default='https://api.mangaupdates.com/')
+    CURRENCY_EXCHANGE_URL: str | None = Field(
+        default='https://v6.exchangerate-api.com/v6/'
+    )
+    CURRENCY_EXCHANGE_API_KEY: str | None = Field(default=None)
+    SETTINGS_ID: str | None = Field(default=None)
 
 
 paths = pathlib.Path(__file__).parent.resolve()

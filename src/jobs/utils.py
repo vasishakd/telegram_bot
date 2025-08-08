@@ -7,6 +7,10 @@ log = logging.getLogger(__name__)
 
 
 def periodic_task_run(sleep: int):
+    """
+    :param sleep: Задержка в секундах
+    """
+
     def _periodic_task_run(coro: typing.Callable):
         @wraps(coro)
         async def _wrapper(*args, **kwargs):

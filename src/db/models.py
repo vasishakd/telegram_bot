@@ -12,6 +12,7 @@ from sqlalchemy import (
     UniqueConstraint,
     Text,
     TIMESTAMP,
+    Index,
 )
 from sqlalchemy import String
 from sqlalchemy.dialects.postgresql import JSONB
@@ -21,7 +22,9 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 
+from src.config import Config
 from src.db import enums
+from src.enums import Currency
 
 
 class Base(DeclarativeBase):
@@ -208,3 +211,40 @@ class UserSession(Base):
         if session_obj and session_obj.expires_at > datetime.now():
             return session_obj
         return None
+
+
+class CurrencyExchange(Base):
+    __tablename__ = 'currencyexchange'
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    currency: Mapped[Currency] = mapped_column(String())
+    rates: Mapped[dict] = mapped_column(JSONB)
+    date_at: Mapped[datetime] = mapped_column(TIMESTAMP)
+
+    __table_args__ = (
+        Index(
+            'currency_date_idx',
+            'currency',
+            'date_at',
+            unique=True,
+        ),
+    )
+
+    @classmethod
+    async def get_latest_list(
+        cls, session: AsyncSession
+    ) -> Sequence['CurrencyExchange']:
+        settings = await Settings.get(id=Config.SETTINGS_ID, session=session)
+
+        query = select(cls).where(cls.date_at == settings.currency_update_at)
+
+        result = await session.scalars(query)
+
+        return result.all()
+
+
+class Settings(Base):
+    __tablename__ = 'settings'
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    currency_update_at: Mapped[datetime] = mapped_column(TIMESTAMP)

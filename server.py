@@ -11,7 +11,7 @@ from src.clients.telegram_web import TelegramAuthException
 from src.config import Config
 from src.db import models, Session
 from src.utils import get_user_session
-from src.web.routers import api
+from src.web.routers import api, currency
 
 log = logging.getLogger(__name__)
 app = FastAPI()
@@ -25,6 +25,7 @@ app.add_middleware(
 app.mount('/static', StaticFiles(directory='./front/build/static'), name='static')
 
 app.include_router(api.router)
+app.include_router(currency.router)
 
 
 @app.get('/login')
@@ -91,6 +92,11 @@ async def root(
         return RedirectResponse('/login')
 
     return FileResponse('./front/build/index.html')
+
+
+@app.get('/currency')
+async def currency():
+    return FileResponse('./currency/index.html')
 
 
 @app.get('/admin')
