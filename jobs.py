@@ -19,6 +19,7 @@ async def lifespan(app: FastAPI):
     app.state._tasks = [
         asyncio.create_task(tasks.check_notifications_anime()),
         asyncio.create_task(tasks.check_notifications_manga()),
+        asyncio.create_task(tasks.get_currency_exchange_rates()),
     ]
 
     yield  # run app
