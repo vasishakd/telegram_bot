@@ -847,7 +847,7 @@
 
         function formatCurrency(amount, currency) {
             const decimals = ['JPY', 'KRW', 'IDR', 'VND', 'CLP', 'COP'].includes(currency) ? 0 : 2;
-            return amount.toLocaleString('en-US', {
+            return amount.toLocaleString('fr-FR', {
                 minimumFractionDigits: decimals,
                 maximumFractionDigits: decimals
             });
@@ -891,7 +891,7 @@
                     ${info.symbol} ${formatCurrency(convertedAmount, currency)}
                 </div>
                 <div class="exchange-rate-info" id="rate-${currency}">
-                    1 ${mainCurrencyValue} = ${rate.toLocaleString('en-US', {
+                    1 ${mainCurrencyValue} = ${rate.toLocaleString('fr-FR', {
                         minimumFractionDigits: ['JPY', 'KRW', 'IDR', 'VND', 'CLP', 'COP'].includes(currency) ? 0 : 4,
                         maximumFractionDigits: ['JPY', 'KRW', 'IDR', 'VND', 'CLP', 'COP'].includes(currency) ? 0 : 4
                     })} ${currency}
@@ -914,7 +914,7 @@
 
                 if (amountEl && rateEl) {
                     amountEl.textContent = `${info.symbol} ${formatCurrency(convertedAmount, currency)}`;
-                    rateEl.textContent = `1 ${mainCurrencyValue} = ${rate.toLocaleString('en-US', {
+                    rateEl.textContent = `1 ${mainCurrencyValue} = ${rate.toLocaleString('fr-FR', {
                         minimumFractionDigits: ['JPY', 'KRW', 'IDR', 'VND', 'CLP', 'COP'].includes(currency) ? 0 : 4,
                         maximumFractionDigits: ['JPY', 'KRW', 'IDR', 'VND', 'CLP', 'COP'].includes(currency) ? 0 : 4
                     })} ${currency}`;
