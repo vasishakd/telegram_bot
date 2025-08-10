@@ -125,7 +125,7 @@
             letter-spacing: 0.5px;
         }
 
-        input[type="number"] {
+        input[type="text"]#mainAmount {
             width: 100%;
             padding: 14px;
             border: 2px solid #e2e8f0;
@@ -138,7 +138,7 @@
             box-sizing: border-box;
         }
 
-        input[type="number"]:focus {
+        input[type="text"]#mainAmount:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -503,7 +503,7 @@
             <div class="main-currency-row">
                 <div class="amount-input">
                     <label class="input-label">Amount</label>
-                    <input type="number" id="mainAmount" placeholder="Enter amount" value="100" min="0" step="0.01">
+                    <input type="text" id="mainAmount" placeholder="Enter amount" value="1" inputmode="decimal">
                 </div>
                 <div class="currency-select">
                     <label class="input-label">Currency</label>
@@ -555,6 +555,77 @@
         const currencyResults = document.getElementById('currencyResults');
         const loadingOverlay = document.getElementById('loadingOverlay');
         const errorMessage = document.getElementById('errorMessage');
+
+        const PRIORITY_CURRENCIES = ['USD', 'EUR', 'RUB', 'KRW', 'JPY', 'KZT'];
+
+
+        // Format input field with spaces
+        function formatInputValue(input) {
+            const cursorPosition = input.selectionStart;
+            const rawValue = input.value.replace(/[^\d.]/g, ''); // Only allow digits and decimal point
+
+            if (!rawValue || rawValue === '.') {
+                return;
+            }
+
+            // Prevent multiple decimal points
+            const decimalCount = (rawValue.match(/\./g) || []).length;
+            if (decimalCount > 1) {
+                return;
+            }
+
+            let formattedValue;
+            if (rawValue.includes('.')) {
+                const parts = rawValue.split('.');
+                const integerPart = parts[0] ? parseInt(parts[0]) : 0;
+                const decimalPart = parts[1] || '';
+
+                if (integerPart === 0 && parts[0] === '') {
+                    formattedValue = '0.' + decimalPart;
+                } else {
+                    formattedValue = integerPart.toLocaleString('fr-FR') + '.' + decimalPart;
+                }
+            } else {
+                const numericValue = parseInt(rawValue);
+                if (isNaN(numericValue)) {
+                    return;
+                }
+                formattedValue = numericValue.toLocaleString('fr-FR');
+            }
+
+            // Only update if the formatted value is different
+            if (input.value !== formattedValue) {
+                const oldLength = input.value.length;
+                const newLength = formattedValue.length;
+                const spacesAdded = newLength - oldLength;
+
+                input.value = formattedValue;
+
+                // Restore cursor position
+                const newCursorPosition = Math.max(0, cursorPosition + spacesAdded);
+                input.setSelectionRange(newCursorPosition, newCursorPosition);
+            }
+        }
+
+        // Handle keypress to only allow numbers, decimal point, and backspace
+        function handleKeyPress(e) {
+            const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+            const isNumber = /[0-9]/.test(e.key);
+            const isDecimal = e.key === '.';
+            const currentValue = e.target.value;
+
+            if (allowedKeys.includes(e.key) || isNumber || (isDecimal && !currentValue.includes('.'))) {
+                return true;
+            }
+
+            e.preventDefault();
+            return false;
+        }
+
+        // Get raw numeric value from formatted input
+        function getRawInputValue(input) {
+            return parseFloat(input.value.replace(/[^\d.]/g, '')) || 0;
+        }
 
         // API Functions
         async function fetchExchangeRates() {
@@ -704,10 +775,10 @@
                     return;
                 }
 
-                // Sort currencies alphabetically
-                this.filteredOptions.sort();
+                // Sort currencies with priority currencies first
+                const sortedOptions = this.sortCurrencies(this.filteredOptions);
 
-                this.filteredOptions.forEach(currency => {
+                sortedOptions.forEach(currency => {
                     const info = currencyInfo[currency];
                     const option = document.createElement('div');
                     option.className = 'select-option';
@@ -738,6 +809,29 @@
 
                     this.optionsContainer.appendChild(option);
                 });
+            }
+
+            sortCurrencies(currencies) {
+                const priorityCurrencies = [];
+                const regularCurrencies = [];
+
+                currencies.forEach(currency => {
+                    if (PRIORITY_CURRENCIES.includes(currency)) {
+                        priorityCurrencies.push(currency);
+                    } else {
+                        regularCurrencies.push(currency);
+                    }
+                });
+
+                // Sort priority currencies by their order in PRIORITY_CURRENCIES array
+                priorityCurrencies.sort((a, b) => {
+                    return PRIORITY_CURRENCIES.indexOf(a) - PRIORITY_CURRENCIES.indexOf(b);
+                });
+
+                // Sort regular currencies alphabetically
+                regularCurrencies.sort();
+
+                return [...priorityCurrencies, ...regularCurrencies];
             }
 
             updateOptions() {
@@ -776,7 +870,7 @@
         }
 
         function createCurrencyCard(currency) {
-            const amount = parseFloat(mainAmount.value) || 0;
+            const amount = getRawInputValue(mainAmount);
             const rate = getExchangeRate(mainCurrencyValue, currency);
             const convertedAmount = amount * rate;
             const info = currencyInfo[currency];
@@ -807,7 +901,7 @@
         }
 
         function updateAllConversions() {
-            const amount = parseFloat(mainAmount.value) || 0;
+            const amount = getRawInputValue(mainAmount);
 
             targetCurrencies.forEach(currency => {
                 const rate = getExchangeRate(mainCurrencyValue, currency);
@@ -887,6 +981,9 @@
                     {
                         placeholder: 'Select base currency...',
                         onChange: (value) => {
+                            if (mainCurrencyValue === value) {
+                                return;
+                            }
                             mainCurrencyValue = value;
                             newCurrencySelect.updateOptions();
                             renderCurrencies();
@@ -902,7 +999,7 @@
                             return currency === targetCurrencies.has(currency);
                         },
                         onChange: (value) => {
-                            if (value && !targetCurrencies.has(value) && value !== mainCurrencyValue) {
+                            if (value && !targetCurrencies.has(value)) {
                                 addCurrency(value);
                                 newCurrencySelect.setValue(null);
                                 newCurrencySelect.valueElement.textContent = 'Select currency to add...';
@@ -943,7 +1040,19 @@
         }
 
         // Event listeners
-        mainAmount.addEventListener('input', updateAllConversions);
+        mainAmount.addEventListener('input', (e) => {
+            formatInputValue(e.target);
+            updateAllConversions();
+        });
+
+        mainAmount.addEventListener('keydown', handleKeyPress);
+
+        mainAmount.addEventListener('paste', (e) => {
+            setTimeout(() => {
+                formatInputValue(e.target);
+                updateAllConversions();
+            }, 0);
+        });
 
         // Make functions global for button onclick handlers
         window.removeCurrency = removeCurrency;
