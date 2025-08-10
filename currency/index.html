@@ -558,10 +558,6 @@
 
         const PRIORITY_CURRENCIES = ['USD', 'EUR', 'RUB', 'KRW', 'JPY', 'KZT'];
 
-        mainAmount.value = 1;
-        mainAmount.focus();
-
-
         // Format input field with spaces
         function formatInputValue(input) {
             const cursorPosition = input.selectionStart;
@@ -612,17 +608,25 @@
 
         // Handle keypress to only allow numbers, decimal point, and backspace
         function handleKeyPress(e) {
-            const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
-            const isNumber = /[0-9]/.test(e.key);
-            const isDecimal = e.key === '.';
-            const currentValue = e.target.value;
+            // Allowed control keys
+            const controlKeys = [
+              'Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
+              'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+              'Home', 'End'
+            ];
 
-            if (allowedKeys.includes(e.key) || isNumber || (isDecimal && !currentValue.includes('.'))) {
-                return true;
+            // Allow control keys
+            if (controlKeys.includes(e.key)) return;
+
+            // Allow Ctrl/Cmd + A, C, V, X, Z, Y (hotkeys)
+            if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x', 'z', 'y'].includes(e.key.toLowerCase())) {
+              return;
             }
 
-            e.preventDefault();
-            return false;
+            // Allow digits 0-9 only
+            if (!/[0-9]/.test(e.key)) {
+              e.preventDefault();
+            }
         }
 
         // Get raw numeric value from formatted input
@@ -966,6 +970,9 @@
             try {
                 showLoading();
                 hideError();
+
+                mainAmount.value = 1;
+                mainAmount.focus();
 
                 console.log('Starting application initialization...');
 
