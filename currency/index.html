@@ -637,8 +637,6 @@
         // API Functions
         async function fetchExchangeRates() {
             try {
-                console.log('Fetching exchange rates...');
-
                 // Fetch from primary API (ExchangeRate-API)
                 const response = await fetch('/api/currency/exchange-rates');
 
@@ -648,7 +646,6 @@
 
                 const data = await response.json();
 
-                console.log('Exchange rates fetched successfully:', Object.keys(data).length, 'currencies');
                 return data;
 
             } catch (error) {
@@ -658,7 +655,6 @@
         }
 
         async function buildCurrencyInfo() {
-            console.log('Building currency info...');
             currencyInfo = {};
 
             const response = await fetch('/api/currency/list');
@@ -667,8 +663,6 @@
             }
 
             currencyInfo = await response.json();
-
-            console.log('Currency info built:', Object.keys(currencyInfo).length, 'currencies');
         }
 
         // Custom Select Class
@@ -974,15 +968,9 @@
                 mainAmount.value = 1;
                 mainAmount.focus();
 
-                console.log('Starting application initialization...');
-
-                // API Call 1: Fetch exchange rates
-                console.log('Making API call 1: Fetching exchange rates...');
                 const rates = await fetchExchangeRates();
                 exchangeRates = rates;
 
-                // API Call 2: Build currency info (this processes the fetched data)
-                console.log('Processing currency data...');
                 await buildCurrencyInfo(rates);
 
                 // Initialize custom selects
@@ -1030,9 +1018,6 @@
                 });
 
                 renderCurrencies();
-
-                console.log('Application initialized successfully');
-
             } catch (error) {
                 console.error('Failed to initialize app:', error);
                 showError(`Failed to load currency data: ${error.message}. Please refresh the page to try again.`);
