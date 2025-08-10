@@ -503,7 +503,7 @@
             <div class="main-currency-row">
                 <div class="amount-input">
                     <label class="input-label">Amount</label>
-                    <input type="text" id="mainAmount" placeholder="Enter amount" value="1" inputmode="decimal">
+                    <input type="text" id="mainAmount" placeholder="Enter amount" inputmode="decimal">
                 </div>
                 <div class="currency-select">
                     <label class="input-label">Currency</label>
@@ -557,6 +557,9 @@
         const errorMessage = document.getElementById('errorMessage');
 
         const PRIORITY_CURRENCIES = ['USD', 'EUR', 'RUB', 'KRW', 'JPY', 'KZT'];
+
+        mainAmount.value = 1;
+        mainAmount.focus();
 
 
         // Format input field with spaces
@@ -912,7 +915,7 @@
                 const rateEl = document.getElementById(`rate-${currency}`);
 
                 if (amountEl && rateEl) {
-                    amountEl.textContent = `${info.symbol}${formatCurrency(convertedAmount, currency)}`;
+                    amountEl.textContent = `${info.symbol} ${formatCurrency(convertedAmount, currency)}`;
                     rateEl.textContent = `1 ${mainCurrencyValue} = ${rate.toLocaleString('en-US', {
                         minimumFractionDigits: ['JPY', 'KRW', 'IDR', 'VND', 'CLP', 'COP'].includes(currency) ? 0 : 4,
                         maximumFractionDigits: ['JPY', 'KRW', 'IDR', 'VND', 'CLP', 'COP'].includes(currency) ? 0 : 4
