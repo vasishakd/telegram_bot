@@ -29,10 +29,6 @@
             transition: transform 0.3s ease;
         }
 
-        .converter-container:hover {
-            transform: translateY(-5px);
-        }
-
         .title {
             text-align: center;
             color: #2d3748;
@@ -43,15 +39,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-        }
-
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
@@ -350,8 +337,36 @@
             transition: all 0.2s ease;
         }
 
+        .swap-btn {
+            display: flex;
+            background: #bde3bd;
+            border: none;
+            border-radius: 8px;
+            margin: 5px;
+            padding: 8px 10px;
+            color: #000000;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .swap-btn svg {
+            height: 17px;
+            width: 17px;
+        }
+
+        .header-item:nth-child(2) {
+            margin-left: auto;
+        }
+
         .remove-btn:hover {
             background: #feb2b2;
+            transform: scale(1.05);
+        }
+
+        .swap-btn:hover {
+            background: #8ccc8c;
             transform: scale(1.05);
         }
 
@@ -846,15 +861,21 @@
             const info = currencyInfo[currency];
 
             const card = document.createElement('div');
-            card.className = 'currency-result-card slide-in';
+            card.className = 'currency-result-card';
             card.dataset.currency = currency;
 
             card.innerHTML = `
                 <div class="currency-header">
                     <div class="currency-code-card">${info.flag} ${currency}</div>
-                    <button class="remove-btn" onclick="removeCurrency('${currency}')">
+                    <button class="remove-btn header-item" onclick="removeCurrency('${currency}')">
                         ✕
                     </button>
+                    <div class="swap-btn header-item" onclick="swapCurrency('${currency}')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="800px" height="800px" viewBox="0 0 24 24" fill="none">
+                            <path d="M21 7.5L8 7.5M21 7.5L16.6667 3M21 7.5L16.6667 12" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M4 16.5L17 16.5M4 16.5L8.33333 21M4 16.5L8.33333 12" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
                 </div>
                 <div class="converted-amount" id="amount-${currency}">
                     ${info.symbol} ${formatCurrency(convertedAmount, currency)}
@@ -924,6 +945,15 @@
 
         function removeCurrency(currency) {
             targetCurrencies.delete(currency);
+            renderCurrencies();
+            newCurrencySelect.updateOptions();
+        }
+
+        function swapCurrency(currency) {
+            targetCurrencies = new Set(
+              [...targetCurrencies].map(v => v === currency ? mainCurrencySelect.selectedValue : v)
+            );
+            mainCurrencySelect.setValue(currency);
             renderCurrencies();
             newCurrencySelect.updateOptions();
         }
