@@ -328,8 +328,8 @@
         .remove-btn {
             background: #fed7d7;
             border: none;
-            border-radius: 8px;
-            padding: 8px 12px;
+            border-radius: 6px;
+            padding: 4px 5px;
             color: #e53e3e;
             cursor: pointer;
             font-size: 0.9rem;
@@ -341,19 +341,19 @@
             display: flex;
             background: #bde3bd;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             margin: 5px;
-            padding: 8px 10px;
+            padding: 6px 5px;
             color: #000000;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.7rem;
             font-weight: 600;
             transition: all 0.2s ease;
         }
 
-        .swap-btn svg {
-            height: 17px;
-            width: 17px;
+        .swap-btn svg, .remove-btn svg {
+            height: 13px;
+            width: 13px;
         }
 
         .header-item:nth-child(2) {
@@ -867,9 +867,9 @@
             card.innerHTML = `
                 <div class="currency-header">
                     <div class="currency-code-card">${info.flag} ${currency}</div>
-                    <button class="remove-btn header-item" onclick="removeCurrency('${currency}')">
-                        ✕
-                    </button>
+                    <div class="remove-btn header-item" onclick="removeCurrency('${currency}')">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M5.29289 5.29289C5.68342 4.90237 6.31658 4.90237 6.70711 5.29289L12 10.5858L17.2929 5.29289C17.6834 4.90237 18.3166 4.90237 18.7071 5.29289C19.0976 5.68342 19.0976 6.31658 18.7071 6.70711L13.4142 12L18.7071 17.2929C19.0976 17.6834 19.0976 18.3166 18.7071 18.7071C18.3166 19.0976 17.6834 19.0976 17.2929 18.7071L12 13.4142L6.70711 18.7071C6.31658 19.0976 5.68342 19.0976 5.29289 18.7071C4.90237 18.3166 4.90237 17.6834 5.29289 17.2929L10.5858 12L5.29289 6.70711C4.90237 6.31658 4.90237 5.68342 5.29289 5.29289Z" fill="#0F1729"></path> </g></svg>
+                    </div>
                     <div class="swap-btn header-item" onclick="swapCurrency('${currency}')">
                         <svg xmlns="http://www.w3.org/2000/svg" width="800px" height="800px" viewBox="0 0 24 24" fill="none">
                             <path d="M21 7.5L8 7.5M21 7.5L16.6667 3M21 7.5L16.6667 12" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
