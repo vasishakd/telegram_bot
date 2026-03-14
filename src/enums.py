@@ -168,6 +168,18 @@ class Currency(StrEnum):
     ZMW = 'ZMW'
     ZWL = 'ZWL'
 
+    @staticmethod
+    def active_currencies() -> list['Currency']:
+        return [
+            Currency.USD,
+            Currency.EUR,
+            Currency.RUB,
+            Currency.KZT,
+            Currency.KRW,
+            Currency.JPY,
+            Currency.CNY,
+        ]
+
     @property
     def full_name(self) -> str:
         return {

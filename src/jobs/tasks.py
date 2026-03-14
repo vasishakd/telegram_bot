@@ -39,7 +39,7 @@ async def get_currency_exchange_rates():
     if last_update_at <= settings.currency_update_at:
         return
 
-    for currency in list(Currency):
+    for currency in Currency.active_currencies():
         currency: Currency
         exchange_rates = await currency_client.get_exchange(currency=currency)
 
