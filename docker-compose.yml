@@ -1,7 +1,7 @@
 services:
 
   postgres:
-    image: registry.tochka-tech.com/proxy_docker-io/library/postgres:14.6
+    image: postgres:14.6
     environment:
       - POSTGRES_PASSWORD=imsolnce
       - POSTGRES_USER=imsolnce

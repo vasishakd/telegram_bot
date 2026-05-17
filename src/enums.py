@@ -178,6 +178,7 @@ class Currency(StrEnum):
             Currency.KRW,
             Currency.JPY,
             Currency.CNY,
+            Currency.GEL,
         ]
 
     @property

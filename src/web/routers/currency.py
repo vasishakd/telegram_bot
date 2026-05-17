@@ -1,8 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from src import constants
 from src.db import models, Session
 from src.enums import Currency
+from src.jobs import service
+
+from src.utils import verify_basic_auth
 
 router = APIRouter(prefix='/api/currency')
 
@@ -37,3 +40,8 @@ async def list_currencies():
         }
 
     return data
+
+
+@router.get('/refresh', dependencies=[Depends(verify_basic_auth)])
+async def refresh_currencies():
+    await service.refresh_currency_rates()

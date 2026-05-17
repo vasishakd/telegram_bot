@@ -28,6 +28,8 @@ class ConfigENV(BaseModel):
     )
     CURRENCY_EXCHANGE_API_KEY: str | None = Field(default=None)
     SETTINGS_ID: str | None = Field(default=None)
+    BASIC_AUTH_LOGIN: str | None = Field(default='')
+    BASIC_AUTH_PASSWORD: str | None = Field(default='')
 
 
 paths = pathlib.Path(__file__).parent.resolve()
