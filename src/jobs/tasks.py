@@ -1,7 +1,7 @@
 import datetime
 import logging
 
-from sqlalchemy import select, func, update
+from sqlalchemy import select, func
 from sqlalchemy.orm import joinedload
 from telegram import Bot
 
