@@ -11,6 +11,7 @@ import secrets
 
 security = HTTPBasic()
 
+
 async def get_user_session(
     session: AsyncSession, request: Request
 ) -> models.UserSession | None:
@@ -48,8 +49,8 @@ def verify_basic_auth(credentials: HTTPBasicCredentials = Depends(security)) -> 
     if not (is_username_valid and is_password_valid):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
-            headers={"WWW-Authenticate": "Basic"},
+            detail='Invalid credentials',
+            headers={'WWW-Authenticate': 'Basic'},
         )
 
     return credentials.username
